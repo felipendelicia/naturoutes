@@ -105,6 +105,7 @@ export default function MapView({
   rings = [],
   fitRing = null,
   hoverPoint = null,
+  measurePoints = [],
   onMapClick,
   onMoveWaypoint,
   onInsertWaypoint,
@@ -120,6 +121,7 @@ export default function MapView({
   rings?: Ring[];
   fitRing?: Ring | null;
   hoverPoint?: LatLng | null;
+  measurePoints?: LatLng[];
   onMapClick: (p: LatLng) => void;
   onMoveWaypoint?: (index: number, point: LatLng) => void;
   onInsertWaypoint?: (point: LatLng) => void;
@@ -209,6 +211,26 @@ export default function MapView({
               onMoveWaypoint?.(i, { lat: ll.lat, lng: ll.lng });
             },
             contextmenu: () => onDeleteWaypoint?.(i),
+          }}
+        />
+      ))}
+
+      {measurePoints.length >= 2 && (
+        <Polyline
+          positions={measurePoints.map((p) => [p.lat, p.lng])}
+          pathOptions={{ color: "#2f4338", weight: 2, dashArray: "5 5" }}
+        />
+      )}
+      {measurePoints.map((p, i) => (
+        <CircleMarker
+          key={`m${i}`}
+          center={[p.lat, p.lng]}
+          radius={4}
+          pathOptions={{
+            color: "#f3efe4",
+            weight: 1.5,
+            fillColor: "#2f4338",
+            fillOpacity: 1,
           }}
         />
       ))}

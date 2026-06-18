@@ -13,10 +13,13 @@ import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
 import RecorderControl from "./RecorderControl";
+import CompassControl from "./CompassControl";
+import MeasureControl from "./MeasureControl";
 import PwaRegister from "./PwaRegister";
 import { downloadText } from "./download";
 import { loadLastLocation } from "./lastLocation";
 import { nearestSegmentIndex } from "@/lib/geo/segment";
+import { totalDistance } from "@/lib/geo/haversine";
 import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
 import { directionsUrl } from "@/lib/io/googleMaps";
@@ -86,6 +89,8 @@ export default function PlannerApp() {
   const [rings, setRings] = useState<Ring[]>([]);
   const [lastRing, setLastRing] = useState<Ring | null>(null);
   const [hoverPoint, setHoverPoint] = useState<LatLng | null>(null);
+  const [tool, setTool] = useState<"plan" | "measure">("plan");
+  const [measurePoints, setMeasurePoints] = useState<LatLng[]>([]);
   // Start where we last were (persisted), then live GPS recenters precisely.
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
   const { state, route, loading } = planner;
@@ -142,6 +147,19 @@ export default function PlannerApp() {
     setLastRing(ring); // triggers the map to frame the new circle
   }
 
+  function handleMapClick(point: LatLng) {
+    if (tool === "measure") {
+      setMeasurePoints((ms) => [...ms, point]);
+    } else {
+      planner.addWaypoint(point);
+    }
+  }
+
+  function toggleMeasure() {
+    setTool((t) => (t === "measure" ? "plan" : "measure"));
+    setMeasurePoints([]);
+  }
+
   function handleInsertWaypoint(point: LatLng) {
     if (state.waypoints.length < 2) {
       planner.addWaypoint(point);
@@ -173,7 +191,8 @@ export default function PlannerApp() {
           rings={rings}
           fitRing={lastRing}
           hoverPoint={hoverPoint}
-          onMapClick={planner.addWaypoint}
+          measurePoints={measurePoints}
+          onMapClick={handleMapClick}
           onMoveWaypoint={planner.moveWaypoint}
           onInsertWaypoint={handleInsertWaypoint}
           onDeleteWaypoint={planner.removeWaypoint}
@@ -239,6 +258,15 @@ export default function PlannerApp() {
       <RecorderControl
         profile={state.profile}
         onSave={(route, name) => saved.save(route, name, "recorded")}
+      />
+
+      <CompassControl />
+      <MeasureControl
+        active={tool === "measure"}
+        pointsCount={measurePoints.length}
+        distanceMeters={totalDistance(measurePoints)}
+        onToggle={toggleMeasure}
+        onClear={() => setMeasurePoints([])}
       />
 
       {/* ── Radius rings control ──────────────────────────── */}
