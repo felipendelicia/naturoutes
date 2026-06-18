@@ -13,6 +13,8 @@ import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
 import type { LatLng, Route } from "@/lib/types";
 
+export type Ring = { id: string; center: LatLng; radiusKm: number };
+
 function ClickHandler({ onMapClick }: { onMapClick: (p: LatLng) => void }) {
   useMapEvents({
     click(e) {
@@ -67,6 +69,7 @@ export default function MapView({
   waypoints,
   userPosition,
   recenter = null,
+  rings = [],
   onMapClick,
   center,
   zoom,
@@ -76,6 +79,7 @@ export default function MapView({
   waypoints: LatLng[];
   userPosition: (LatLng & { accuracy?: number }) | null;
   recenter?: LatLng | null;
+  rings?: Ring[];
   onMapClick: (p: LatLng) => void;
   center: LatLng;
   zoom: number;
@@ -99,6 +103,20 @@ export default function MapView({
       <RecenterOnUser position={recenter} />
       <FlyTo target={flyTo} />
       <TrackpadGestures />
+
+      {rings.map((r) => (
+        <Circle
+          key={r.id}
+          center={[r.center.lat, r.center.lng]}
+          radius={r.radiusKm * 1000}
+          pathOptions={{
+            color: "#2f4338",
+            weight: 1.5,
+            dashArray: "4 7",
+            fill: false,
+          }}
+        />
+      ))}
 
       {route && route.geometry.length >= 2 && (
         <Polyline

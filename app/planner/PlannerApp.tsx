@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { usePlanner } from "./usePlanner";
 import { useGeolocation } from "./useGeolocation";
 import { useSavedRoutes } from "./useSavedRoutes";
-import MapView from "./MapView";
+import MapView, { type Ring } from "./MapView";
+import RadiusControl from "./RadiusControl";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
 import RoutesSheet from "./RoutesSheet";
@@ -70,6 +71,7 @@ export default function PlannerApp() {
   const saved = useSavedRoutes();
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [rings, setRings] = useState<Ring[]>([]);
   // Start where we last were (persisted), then live GPS recenters precisely.
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
   const { state, route, loading } = planner;
@@ -115,6 +117,18 @@ export default function PlannerApp() {
     if (url) window.open(url, "_blank", "noopener");
   }
 
+  function handleAddRing(radiusKm: number) {
+    if (!geo.position) return;
+    setRings((rs) => [
+      ...rs,
+      {
+        id: crypto.randomUUID(),
+        center: { lat: geo.position!.lat, lng: geo.position!.lng },
+        radiusKm,
+      },
+    ]);
+  }
+
   function handleImport(text: string) {
     const { waypoints, dense } = fromGpx(text);
     if (waypoints.length < 2) {
@@ -134,6 +148,7 @@ export default function PlannerApp() {
           waypoints={state.waypoints}
           userPosition={geo.position}
           recenter={geo.centerTarget}
+          rings={rings}
           onMapClick={planner.addWaypoint}
           center={initialCenter}
           zoom={13}
@@ -202,6 +217,16 @@ export default function PlannerApp() {
           </p>
         </div>
       )}
+
+      {/* ── Radius rings control ──────────────────────────── */}
+      <RadiusControl
+        rings={rings}
+        canAdd={!!geo.position}
+        onAdd={handleAddRing}
+        onRemove={(id) => setRings((rs) => rs.filter((r) => r.id !== id))}
+        onClear={() => setRings([])}
+        onRequestLocate={geo.locate}
+      />
 
       {/* ── GPS button ────────────────────────────────────── */}
       <button
