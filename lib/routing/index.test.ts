@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { computeRoute } from "./index";
+import { computeRoute, computeAlternatives } from "./index";
 
 const wps = [
   { lat: 0, lng: 0 },
@@ -54,5 +54,43 @@ describe("computeRoute", () => {
     expect(r.mode).toBe("manual");
     expect(r.fallback).toBe(true);
     expect(r.distanceMeters).toBeGreaterThan(0);
+  });
+});
+
+describe("computeAlternatives", () => {
+  it("returns a single manual route in manual mode", async () => {
+    const fetchAlt = vi.fn();
+    const rs = await computeAlternatives(
+      wps,
+      { mode: "manual", profile: "bike" },
+      { fetchAlt },
+    );
+    expect(rs).toHaveLength(1);
+    expect(rs[0].mode).toBe("manual");
+    expect(fetchAlt).not.toHaveBeenCalled();
+  });
+
+  it("returns BRouter alternatives in auto mode", async () => {
+    const fetchAlt = vi.fn().mockResolvedValue([
+      { waypoints: wps, geometry: wps, distanceMeters: 100, profile: "bike", mode: "auto" },
+      { waypoints: wps, geometry: wps, distanceMeters: 120, profile: "bike", mode: "auto" },
+    ]);
+    const rs = await computeAlternatives(
+      wps,
+      { mode: "auto", profile: "bike" },
+      { fetchAlt },
+    );
+    expect(rs).toHaveLength(2);
+  });
+
+  it("falls back to a single manual line when alternatives fail", async () => {
+    const fetchAlt = vi.fn().mockRejectedValue(new Error("down"));
+    const rs = await computeAlternatives(
+      wps,
+      { mode: "auto", profile: "bike" },
+      { fetchAlt },
+    );
+    expect(rs).toHaveLength(1);
+    expect(rs[0].fallback).toBe(true);
   });
 });

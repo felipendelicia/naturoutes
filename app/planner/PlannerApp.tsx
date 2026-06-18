@@ -9,6 +9,7 @@ import RadiusControl from "./RadiusControl";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
 import ProfilePicker from "./ProfilePicker";
+import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
 import PwaRegister from "./PwaRegister";
@@ -255,6 +256,13 @@ export default function PlannerApp() {
 
       {/* ── Bottom instrument panel ───────────────────────── */}
       <section className="animate-rise absolute inset-x-0 bottom-0 z-[1000] p-3">
+        <div className="mb-2">
+          <AlternativesBar
+            alternatives={planner.alternatives}
+            selected={planner.selected}
+            onSelect={planner.setSelected}
+          />
+        </div>
         <div className="panel rounded-3xl px-5 pb-4 pt-3">
           <div className="mb-3 flex items-center justify-between">
             <Segmented<Mode>

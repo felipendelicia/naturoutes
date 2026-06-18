@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { parseBrouterGeoJSON, fetchBrouterRoute } from "./brouter";
+import {
+  parseBrouterGeoJSON,
+  fetchBrouterRoute,
+  fetchAlternatives,
+} from "./brouter";
 
 const sample = {
   type: "FeatureCollection",
@@ -64,6 +68,47 @@ describe("fetchBrouterRoute", () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response);
     await expect(
       fetchBrouterRoute(wps, "bike", fetchImpl as unknown as typeof fetch),
+    ).rejects.toThrow();
+  });
+});
+
+function sampleWithLength(len: number) {
+  return {
+    features: [
+      {
+        properties: { "track-length": String(len) },
+        geometry: {
+          coordinates: [
+            [-3.7, 40.4, 600],
+            [-3.68, 40.42, 605],
+          ],
+        },
+      },
+    ],
+  };
+}
+
+describe("fetchAlternatives", () => {
+  it("returns distinct routes across alternativeidx, deduped by distance", async () => {
+    const lens: Record<number, number> = { 0: 1000, 1: 1200, 2: 1500, 3: 1200 };
+    const fetchImpl = vi.fn(async (url: string) => {
+      const idx = Number(new URL(url).searchParams.get("alternativeidx"));
+      return { ok: true, json: async () => sampleWithLength(lens[idx]) } as Response;
+    });
+
+    const routes = await fetchAlternatives(
+      wps,
+      "bike",
+      fetchImpl as unknown as typeof fetch,
+    );
+    expect(routes.map((r) => r.distanceMeters)).toEqual([1000, 1200, 1500]);
+    expect(fetchImpl).toHaveBeenCalledTimes(4);
+  });
+
+  it("throws when no alternative succeeds", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response);
+    await expect(
+      fetchAlternatives(wps, "bike", fetchImpl as unknown as typeof fetch),
     ).rejects.toThrow();
   });
 });
