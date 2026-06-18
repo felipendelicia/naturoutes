@@ -40,21 +40,30 @@ function FlyTo({ target }: { target: LatLng | null }) {
   return null;
 }
 
-// Trackpad gestures: two-finger swipe pans, pinch (ctrl+wheel) zooms.
+// Pointer gestures:
+//  - mouse wheel        → zoom
+//  - pinch / ctrl+wheel → zoom
+//  - trackpad two-finger swipe → pan
+// A mouse wheel reports line/page deltas (deltaMode !== 0) or large vertical-only
+// pixel deltas; a trackpad swipe reports small pixel deltas, usually with deltaX.
 function TrackpadGestures() {
   const map = useMap();
   useEffect(() => {
     const el = map.getContainer();
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      if (e.ctrlKey) {
-        // Trackpad pinch / ctrl+wheel → zoom around the cursor.
-        const zoom = map.getZoom() - e.deltaY * 0.01;
+      const isMouseWheel =
+        e.deltaMode !== 0 ||
+        (e.deltaX === 0 && Math.abs(e.deltaY) >= 50);
+      if (e.ctrlKey || isMouseWheel) {
+        // Normalize line/page deltas to pixels so a notch zooms a sensible amount.
+        const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1;
+        const dy = e.deltaY * unit;
+        const zoom = map.getZoom() - dy * 0.01;
         map.setZoomAround(map.mouseEventToContainerPoint(e), zoom, {
           animate: false,
         });
       } else {
-        // Two-finger swipe → pan.
         map.panBy([e.deltaX, e.deltaY], { animate: false });
       }
     };
