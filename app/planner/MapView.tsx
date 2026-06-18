@@ -64,8 +64,9 @@ function BoundsEmitter({
   return null;
 }
 
-// Adds a waypoint only on a deliberate tap on the base map: no movement (so
-// panning never adds a point) and not on a marker / route line.
+// Adds a waypoint on Leaflet's native click (reliable on desktop + mobile), but
+// suppresses it when the gesture moved more than a few px (i.e. it was a pan).
+// Movement is tracked via pointer/mouse/touch so it works across platforms.
 function TapHandler({ onTap }: { onTap: (p: LatLng) => void }) {
   const map = useMap();
   const cb = useRef(onTap);
@@ -74,40 +75,48 @@ function TapHandler({ onTap }: { onTap: (p: LatLng) => void }) {
   });
   useEffect(() => {
     const el = map.getContainer();
-    let start: { x: number; y: number; t: number; moved: boolean } | null = null;
-    const onDown = (e: PointerEvent) => {
-      if (e.button > 0) return;
-      const target = e.target as Element;
-      if (target.closest(".leaflet-interactive, .leaflet-marker-icon")) {
-        start = null;
-        return;
-      }
-      start = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false };
+    let down: { x: number; y: number } | null = null;
+    let maxMove = 0;
+    const begin = (x: number, y: number) => {
+      down = { x, y };
+      maxMove = 0;
     };
-    const onMove = (e: PointerEvent) => {
-      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) {
-        start.moved = true;
-      }
+    const track = (x: number, y: number) => {
+      if (down) maxMove = Math.max(maxMove, Math.hypot(x - down.x, y - down.y));
     };
-    const onUp = (e: PointerEvent) => {
-      const s = start;
-      start = null;
-      if (!s || s.moved || Date.now() - s.t > 500) return; // pan / long-press → ignore
-      const ll = map.mouseEventToLatLng(e as unknown as MouseEvent);
-      cb.current({ lat: ll.lat, lng: ll.lng });
+    const pd = (e: PointerEvent) => begin(e.clientX, e.clientY);
+    const pm = (e: PointerEvent) => track(e.clientX, e.clientY);
+    const mdn = (e: MouseEvent) => begin(e.clientX, e.clientY);
+    const mmv = (e: MouseEvent) => track(e.clientX, e.clientY);
+    const tst = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) begin(t.clientX, t.clientY);
     };
-    const onCancel = () => {
-      start = null;
+    const tmv = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) track(t.clientX, t.clientY);
     };
-    el.addEventListener("pointerdown", onDown);
-    el.addEventListener("pointermove", onMove);
-    el.addEventListener("pointerup", onUp);
-    el.addEventListener("pointercancel", onCancel);
+    el.addEventListener("pointerdown", pd);
+    el.addEventListener("pointermove", pm);
+    el.addEventListener("mousedown", mdn);
+    el.addEventListener("mousemove", mmv);
+    el.addEventListener("touchstart", tst, { passive: true });
+    el.addEventListener("touchmove", tmv, { passive: true });
+
+    const onClick = (e: L.LeafletMouseEvent) => {
+      if (maxMove > 10) return; // it was a drag → not a deliberate tap
+      cb.current({ lat: e.latlng.lat, lng: e.latlng.lng });
+    };
+    map.on("click", onClick);
+
     return () => {
-      el.removeEventListener("pointerdown", onDown);
-      el.removeEventListener("pointermove", onMove);
-      el.removeEventListener("pointerup", onUp);
-      el.removeEventListener("pointercancel", onCancel);
+      el.removeEventListener("pointerdown", pd);
+      el.removeEventListener("pointermove", pm);
+      el.removeEventListener("mousedown", mdn);
+      el.removeEventListener("mousemove", mmv);
+      el.removeEventListener("touchstart", tst);
+      el.removeEventListener("touchmove", tmv);
+      map.off("click", onClick);
     };
   }, [map]);
   return null;
@@ -276,6 +285,7 @@ export default function MapView({
       {route && route.geometry.length >= 2 && (
         <Polyline
           positions={route.geometry.map((p) => [p.lat, p.lng])}
+          bubblingMouseEvents={false}
           pathOptions={{
             color: route.fallback ? "#c44d1d" : "#e6612b",
             weight: 5,
