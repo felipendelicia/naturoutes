@@ -13,7 +13,10 @@ backend: toda la lógica corre en el navegador. Mobile-first e instalable como P
   Trackpad: dos dedos = pan, Ctrl+dos dedos = zoom · rueda del mouse = zoom.
 - ✏️ **Trazado mixto** (auto vía [BRouter](https://brouter.de) con **fallback** a línea recta, o manual):
   perfiles **Bici (asfalto) / MTB / Caminar**, **rutas alternativas** para elegir,
-  y **edición** de puntos (arrastrar, insertar en la línea, borrar con long-press, invertir).
+  **partir de mi ubicación**, y **paradas reordenables** (arrastrar/↑↓, con nombres por
+  reverse-geocoding) además de editar puntos en el mapa (arrastrar, insertar, borrar, invertir).
+- 📲 **UI mobile-first**: hoja inferior arrastrable (estilo Google Maps) con la info y acciones;
+  herramientas consolidadas en una hoja; un solo botón flotante (GPS).
 - 📈 **Distancia, tiempo estimado, tipo de superficie** (% asfalto) y **perfil de elevación
   interactivo** (hover marca el punto en el mapa).
 - 🧭 **Herramientas**: grabar tu recorrido con **GPS** (tracking + stats, guardado como ruta),
