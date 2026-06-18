@@ -3,6 +3,7 @@
 import { usePlanner } from "./usePlanner";
 import { useGeolocation } from "./useGeolocation";
 import MapView from "./MapView";
+import ElevationProfile from "./ElevationProfile";
 import type { Mode, Profile } from "@/lib/types";
 
 const CENTER = { lat: 40.4168, lng: -3.7038 }; // Madrid
@@ -231,6 +232,8 @@ export default function PlannerApp() {
               </span>
             </div>
           </div>
+
+          <ElevationProfile route={route} />
 
           <div className="mt-2 h-4 text-[11px] font-medium">
             {loading && (
