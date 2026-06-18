@@ -17,8 +17,8 @@ backend: toda la lógica corre en el navegador. Mobile-first e instalable como P
 - 🔎 **Búsqueda de lugares** (Nominatim), ordenada por distancia a tu ubicación.
 - 📍 **GPS** para centrar en tu posición.
 - 💾 **Guardado local** de rutas en IndexedDB (sin servidor).
-- 📤 *(en progreso)* Export GPX/KML y "Abrir en Google Maps".
-- 📱 *(en progreso)* PWA instalable + offline.
+- 📤 **Export GPX/KML** e **importar GPX**, más "Abrir en Google Maps".
+- 📱 **PWA instalable** con caché offline del app shell y los tiles vistos.
 
 ## Stack
 
