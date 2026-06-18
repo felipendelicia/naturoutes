@@ -14,6 +14,7 @@ describe("PROFILES", () => {
       expect(p.label.length).toBeGreaterThan(0);
       expect(p.brouter.length).toBeGreaterThan(0);
       expect(["bicycling", "walking"]).toContain(p.travel);
+      expect(p.speedKmh).toBeGreaterThan(0);
     }
   });
 });

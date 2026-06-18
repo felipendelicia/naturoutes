@@ -28,6 +28,14 @@ function formatDistance(m: number): { value: string; unit: string } {
   return { value: (m / 1000).toFixed(m < 10000 ? 2 : 1), unit: "km" };
 }
 
+function formatTime(s: number): string {
+  const min = Math.round(s / 60);
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} h ${m} min` : `${h} h`;
+}
+
 function Segmented<T extends string>({
   value,
   options,
@@ -319,13 +327,28 @@ export default function PlannerApp() {
           </div>
 
           <div className="flex items-end justify-between gap-4">
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-mono text-5xl font-medium leading-none tracking-tight text-pine">
-                {dist.value}
-              </span>
-              <span className="text-lg font-semibold uppercase text-moss">
-                {dist.unit}
-              </span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-mono text-5xl font-medium leading-none tracking-tight text-pine">
+                  {dist.value}
+                </span>
+                <span className="text-lg font-semibold uppercase text-moss">
+                  {dist.unit}
+                </span>
+              </div>
+              {(route?.timeSeconds != null ||
+                route?.surface?.pavedRatio != null) && (
+                <div className="flex items-center gap-2 text-[11px] font-medium text-moss">
+                  {route?.timeSeconds != null && (
+                    <span>~{formatTime(route.timeSeconds)}</span>
+                  )}
+                  {route?.surface?.pavedRatio != null && (
+                    <span>
+                      · {Math.round(route.surface.pavedRatio * 100)}% asfalto
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col items-end gap-1 pb-1">

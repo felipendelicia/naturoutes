@@ -1,11 +1,12 @@
 import type { LatLng, Profile, Route, RoutePoint } from "../types";
 import { brouterProfile } from "./profiles";
+import { summarizeSurface } from "./surface";
 
 const ENDPOINT = "https://brouter.de/brouter";
 
 type GeoJSONLike = {
   features?: Array<{
-    properties?: Record<string, string>;
+    properties?: Record<string, unknown>;
     geometry?: { coordinates?: number[][] };
   }>;
 };
@@ -24,6 +25,9 @@ export function parseBrouterGeoJSON(
     ([lng, lat, ele]) => ({ lat, lng, ele }),
   );
   const props = feature.properties ?? {};
+  const messages = Array.isArray(props["messages"])
+    ? (props["messages"] as string[][])
+    : undefined;
   return {
     waypoints,
     geometry,
@@ -32,6 +36,11 @@ export function parseBrouterGeoJSON(
       props["filtered ascend"] !== undefined
         ? Number(props["filtered ascend"])
         : undefined,
+    timeSeconds:
+      props["total-time"] !== undefined
+        ? Number(props["total-time"])
+        : undefined,
+    surface: messages ? summarizeSurface(messages) : undefined,
     profile,
     mode: "auto",
   };
