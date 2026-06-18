@@ -85,6 +85,7 @@ export default function MapView({
       className="h-full w-full"
       zoomControl={false}
       scrollWheelZoom={false}
+      zoomSnap={0}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
