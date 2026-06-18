@@ -12,6 +12,7 @@ import ProfilePicker from "./ProfilePicker";
 import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
+import RecorderControl from "./RecorderControl";
 import PwaRegister from "./PwaRegister";
 import { downloadText } from "./download";
 import { loadLastLocation } from "./lastLocation";
@@ -233,6 +234,12 @@ export default function PlannerApp() {
           </p>
         </div>
       )}
+
+      {/* ── Activity recorder ─────────────────────────────── */}
+      <RecorderControl
+        profile={state.profile}
+        onSave={(route, name) => saved.save(route, name, "recorded")}
+      />
 
       {/* ── Radius rings control ──────────────────────────── */}
       <RadiusControl

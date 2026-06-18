@@ -52,12 +52,18 @@ export default function RoutesSheet({
                   onClick={() => onLoad(r)}
                   className="flex min-w-0 flex-1 flex-col items-start py-2 text-left"
                 >
-                  <span className="w-full truncate text-sm font-semibold text-pine">
-                    {r.name}
+                  <span className="flex w-full items-center gap-1.5">
+                    <span className="truncate text-sm font-semibold text-pine">
+                      {r.name}
+                    </span>
+                    {r.kind === "recorded" && (
+                      <span className="shrink-0 rounded-full bg-blaze/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-blaze-deep">
+                        grabada
+                      </span>
+                    )}
                   </span>
                   <span className="font-mono text-[11px] text-moss">
                     {km(r.distanceMeters)} ·{" "}
-                    {r.profile === "bike" ? "bici" : "pie"} ·{" "}
                     {new Date(r.updatedAt).toLocaleDateString("es")}
                   </span>
                 </button>

@@ -24,8 +24,8 @@ export function useSavedRoutes() {
   }, [reload]);
 
   const save = useCallback(
-    async (route: Route, name: string) => {
-      await saveRoute(idbKv, route, name);
+    async (route: Route, name: string, kind?: "planned" | "recorded") => {
+      await saveRoute(idbKv, route, name, { kind });
       reload();
     },
     [reload],

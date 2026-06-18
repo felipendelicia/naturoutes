@@ -5,6 +5,7 @@ export type SavedRoute = Route & {
   name: string;
   createdAt: number;
   updatedAt: number;
+  kind?: "planned" | "recorded";
 };
 
 export interface KV {
@@ -20,7 +21,7 @@ export async function saveRoute(
   kv: KV,
   route: Route,
   name: string,
-  opts: { id?: string; now?: number } = {},
+  opts: { id?: string; now?: number; kind?: "planned" | "recorded" } = {},
 ): Promise<SavedRoute> {
   const now = opts.now ?? Date.now();
   const id = opts.id ?? crypto.randomUUID();
@@ -31,6 +32,7 @@ export async function saveRoute(
     ...route,
     id,
     name,
+    kind: opts.kind ?? existing?.kind ?? "planned",
     createdAt: existing?.createdAt ?? now,
     updatedAt: now,
   };
