@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function RouteMenu({
   canExport,
@@ -22,7 +23,24 @@ export default function RouteMenu({
   onImportText: (text: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ right: number; bottom: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const inputId = useId();
+
+  function toggle() {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) {
+      setPos({
+        right: window.innerWidth - r.right,
+        bottom: window.innerHeight - r.top + 8,
+      });
+    }
+    setOpen(true);
+  }
 
   function run(action: () => void) {
     action();
@@ -48,7 +66,8 @@ export default function RouteMenu({
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen((o) => !o)}
+        ref={btnRef}
+        onClick={toggle}
         aria-label="Más acciones"
         aria-expanded={open}
         className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95"
@@ -60,37 +79,45 @@ export default function RouteMenu({
         </svg>
       </button>
 
-      {open && (
-        <>
-          <button
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-[1090] cursor-default"
-          />
-          <ul className="panel absolute bottom-full right-0 z-[1100] mb-2 w-52 overflow-hidden rounded-2xl py-1">
-            {items.map((it) => (
-              <li key={it.label}>
-                <button
-                  onClick={() => !it.disabled && run(it.onClick)}
-                  disabled={it.disabled}
-                  className="block w-full px-4 py-2.5 text-left text-sm text-pine transition hover:bg-pine/8 disabled:opacity-30"
+      {open &&
+        pos &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <>
+            <button
+              aria-hidden
+              tabIndex={-1}
+              onClick={() => setOpen(false)}
+              className="fixed inset-0 z-[1190] cursor-default"
+            />
+            <ul
+              className="panel fixed z-[1200] w-52 overflow-hidden rounded-2xl py-1"
+              style={{ right: pos.right, bottom: pos.bottom }}
+            >
+              {items.map((it) => (
+                <li key={it.label}>
+                  <button
+                    onClick={() => !it.disabled && run(it.onClick)}
+                    disabled={it.disabled}
+                    className="block w-full px-4 py-2.5 text-left text-sm text-pine transition hover:bg-pine/8 disabled:opacity-30"
+                  >
+                    {it.label}
+                  </button>
+                </li>
+              ))}
+              <li>
+                <label
+                  htmlFor={inputId}
+                  onClick={() => setOpen(false)}
+                  className="block w-full cursor-pointer px-4 py-2.5 text-left text-sm text-pine transition hover:bg-pine/8"
                 >
-                  {it.label}
-                </button>
+                  Importar GPX
+                </label>
               </li>
-            ))}
-            <li>
-              <label
-                htmlFor={inputId}
-                className="block w-full cursor-pointer px-4 py-2.5 text-left text-sm text-pine transition hover:bg-pine/8"
-              >
-                Importar GPX
-              </label>
-            </li>
-          </ul>
-        </>
-      )}
+            </ul>
+          </>,
+          document.body,
+        )}
 
       <input
         id={inputId}

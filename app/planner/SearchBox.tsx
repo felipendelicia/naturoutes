@@ -6,7 +6,9 @@ import { distance } from "@/lib/geo/haversine";
 import type { LatLng } from "@/lib/types";
 
 function fmtKm(m: number): string {
-  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 100000 ? 0 : 0)} km`;
+  if (m < 1000) return `${Math.round(m)} m`;
+  if (m < 10000) return `${(m / 1000).toFixed(1)} km`;
+  return `${Math.round(m / 1000)} km`;
 }
 
 export default function SearchBox({
@@ -133,7 +135,10 @@ export default function SearchBox({
                       {p.label}
                     </span>
                     {d != null && (
-                      <span className="shrink-0 font-mono text-[10px] text-moss">
+                      <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-blaze/10 px-1.5 py-0.5 font-mono text-[10px] font-bold text-blaze-deep">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                          <path d="M3 11l18-8-8 18-2-8-8-2z" />
+                        </svg>
                         {fmtKm(d)}
                       </span>
                     )}

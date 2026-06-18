@@ -55,7 +55,7 @@ export default function PlannerApp() {
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
   const [originKey, setOriginKey] = useState<string | null>(null);
   const { state, route } = planner;
-  const labelFor = useStopLabels(state.waypoints, originKey);
+  const stops = useStopLabels(state.waypoints, originKey);
 
   const canSave = state.waypoints.length >= 2;
 
@@ -132,6 +132,18 @@ export default function PlannerApp() {
     setSearchTarget(waypoints[0]);
   }
 
+  function handleSearchSelect(place: { lat: number; lng: number; label: string }) {
+    const p = { lat: place.lat, lng: place.lng };
+    const shortLabel = place.label
+      .split(",")
+      .slice(0, 2)
+      .map((s) => s.trim())
+      .join(", ");
+    stops.seed(p, shortLabel); // show the searched name instantly as a stop
+    planner.addWaypoint(p);
+    setSearchTarget(p);
+  }
+
   function handleStartFromLocation() {
     if (geo.position) {
       const p = { lat: geo.position.lat, lng: geo.position.lng };
@@ -181,7 +193,7 @@ export default function PlannerApp() {
         <SearchBox
           origin={geo.position ?? CENTER}
           onActivate={geo.locate}
-          onSelect={(p) => setSearchTarget({ lat: p.lat, lng: p.lng })}
+          onSelect={handleSearchSelect}
         />
         <div className="ml-auto flex items-center gap-2">
           <LayerSwitcher
@@ -250,7 +262,7 @@ export default function PlannerApp() {
         stopsList={
           <StopsList
             waypoints={state.waypoints}
-            labelFor={labelFor}
+            labelFor={stops.labelFor}
             onReorder={planner.reorderWaypoints}
             onRemove={planner.removeWaypoint}
             onCenter={(i) => setSearchTarget(state.waypoints[i])}

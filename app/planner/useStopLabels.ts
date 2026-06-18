@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { reverseGeocode } from "@/lib/geo/geocoding";
 import { coordKey, resolveStopLabel } from "@/lib/geo/stopLabel";
 import type { LatLng } from "@/lib/types";
@@ -43,6 +43,14 @@ export function useStopLabels(waypoints: LatLng[], originKey: string | null) {
     };
   }, [waypoints, originKey]);
 
-  return (p: LatLng): string | null =>
+  const seed = useCallback((p: LatLng, label: string) => {
+    cache.current[coordKey(p)] = label;
+    bump((n) => n + 1);
+  }, []);
+
+  const labelFor = (p: LatLng): string | null =>
     resolveStopLabel(coordKey(p), originKey, cache.current);
+
+  return { labelFor, seed };
 }
+
