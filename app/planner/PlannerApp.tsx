@@ -8,6 +8,7 @@ import MapView, { type Ring } from "./MapView";
 import RadiusControl from "./RadiusControl";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
+import ProfilePicker from "./ProfilePicker";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
 import PwaRegister from "./PwaRegister";
@@ -17,7 +18,7 @@ import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
 import { directionsUrl } from "@/lib/io/googleMaps";
 import type { SavedRoute } from "@/lib/store/routeStore";
-import type { LatLng, Mode, Profile } from "@/lib/types";
+import type { LatLng, Mode } from "@/lib/types";
 
 const CENTER = { lat: 40.4168, lng: -3.7038 }; // Madrid
 
@@ -190,17 +191,7 @@ export default function PlannerApp() {
           </span>
         </div>
 
-        <div className="panel pointer-events-auto rounded-2xl px-1.5 py-1.5">
-          <Segmented<Profile>
-            label="Actividad"
-            value={state.profile}
-            onChange={planner.setProfile}
-            options={[
-              { value: "bike", label: "Bici" },
-              { value: "foot", label: "Pie" },
-            ]}
-          />
-        </div>
+        <ProfilePicker value={state.profile} onChange={planner.setProfile} />
        </div>
        <SearchBox
          origin={geo.position ?? CENTER}

@@ -1,9 +1,5 @@
 import type { LatLng, Profile, Route, RoutePoint } from "../types";
-
-export const BROUTER_PROFILE: Record<Profile, string> = {
-  bike: "trekking",
-  foot: "hiking-mountain",
-};
+import { brouterProfile } from "./profiles";
 
 const ENDPOINT = "https://brouter.de/brouter";
 
@@ -49,7 +45,7 @@ export async function fetchBrouterRoute(
   const lonlats = waypoints.map((w) => `${w.lng},${w.lat}`).join("|");
   const url =
     `${ENDPOINT}?lonlats=${lonlats}` +
-    `&profile=${BROUTER_PROFILE[profile]}` +
+    `&profile=${brouterProfile(profile)}` +
     `&alternativeidx=0&format=geojson`;
   const res = await fetchImpl(url);
   if (!res.ok) {

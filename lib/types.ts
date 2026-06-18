@@ -1,6 +1,6 @@
 export type LatLng = { lat: number; lng: number };
 export type RoutePoint = LatLng & { ele?: number };
-export type Profile = "bike" | "foot";
+export type Profile = "bike" | "bike-fast" | "mtb" | "gravel" | "foot";
 export type Mode = "auto" | "manual";
 
 export type Route = {

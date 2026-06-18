@@ -1,4 +1,5 @@
 import type { LatLng, Profile, Route } from "../types";
+import { profileDef } from "../routing/profiles";
 
 const MAX_WAYPOINTS = 9;
 
@@ -12,7 +13,7 @@ export function directionsUrl(route: Route, profile: Profile): string {
 
   const origin = fmt(wps[0]);
   const destination = fmt(wps[wps.length - 1]);
-  const travelmode = profile === "bike" ? "bicycling" : "walking";
+  const travelmode = profileDef(profile).travel;
 
   let middle = wps.slice(1, -1);
   if (middle.length > MAX_WAYPOINTS) {
