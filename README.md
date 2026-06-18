@@ -9,16 +9,19 @@ backend: toda la lógica corre en el navegador. Mobile-first e instalable como P
 
 ## Qué hace
 
-- 🗺️ **Mapa** Leaflet + OpenStreetMap (sin API key). En trackpad: dos dedos = pan, pinch = zoom.
-- ✏️ **Trazado mixto**: tocá el mapa para agregar puntos.
-  - *Auto*: la ruta se ajusta a caminos según perfil **bici/pie** (vía [BRouter](https://brouter.de)), con **fallback** a línea recta si falla.
-  - *Manual*: líneas rectas entre puntos.
-- 📈 **Distancia** y **perfil de elevación** (altimetría desde BRouter).
-- 🔎 **Búsqueda de lugares** (Nominatim), ordenada por distancia a tu ubicación.
-- 📍 **GPS** para centrar en tu posición.
-- 💾 **Guardado local** de rutas en IndexedDB (sin servidor).
-- 📤 **Export GPX/KML** e **importar GPX**, más "Abrir en Google Maps".
-- 📱 **PWA instalable** con caché offline del app shell y los tiles vistos.
+- 🗺️ **Mapa** Leaflet con capas conmutables: **calle / satélite / relieve / ciclovías**.
+  Trackpad: dos dedos = pan, Ctrl+dos dedos = zoom · rueda del mouse = zoom.
+- ✏️ **Trazado mixto** (auto vía [BRouter](https://brouter.de) con **fallback** a línea recta, o manual):
+  perfiles **Bici (asfalto) / MTB / Caminar**, **rutas alternativas** para elegir,
+  y **edición** de puntos (arrastrar, insertar en la línea, borrar con long-press, invertir).
+- 📈 **Distancia, tiempo estimado, tipo de superficie** (% asfalto) y **perfil de elevación
+  interactivo** (hover marca el punto en el mapa).
+- 🧭 **Herramientas**: grabar tu recorrido con **GPS** (tracking + stats, guardado como ruta),
+  **brújula**, **medir distancia** y **círculos de radio** desde tu ubicación.
+- 📌 **POIs** (agua, refugios, bici) vía Overpass.
+- 🔎 **Búsqueda de lugares** (Nominatim) ordenada por distancia a vos · 📍 **GPS** con auto-ubicar.
+- 💾 **Guardado local** de rutas en IndexedDB · 📤 **Export/Import GPX**, **KML** y "Abrir en Google Maps".
+- 📱 **PWA instalable** + **descarga de mapas por zona** para uso **offline** sin señal.
 
 ## Stack
 
@@ -45,22 +48,27 @@ La lógica pura vive en `lib/` (framework-free, testeada con Vitest); la UI en `
 
 ```
 lib/
-  geo/        haversine · elevación · geocoding
-  routing/    BRouter · manual · dispatcher con fallback
-  planner/    reducer de estado
+  geo/        haversine · elevación · geocoding · segmento (insertar)
+  routing/    BRouter (+ alternativas, superficie) · manual · perfiles · dispatcher
+  planner/    reducer de estado (incluye edición de waypoints)
   store/      persistencia (KV inyectable + backend IndexedDB)
   io/         export GPX/KML/Google Maps
-app/planner/  MapView, hooks (usePlanner, useGeolocation, useSavedRoutes) y UI
-docs/superpowers/  spec y plan de implementación
+  map/        capas base · matemática de tiles (offline)
+  poi/        Overpass (puntos de interés)
+  tracking/   stats de recorrido grabado
+app/planner/  MapView + hooks (usePlanner, useGeolocation, useRecorder, useLayer,
+              usePois, useOnline…) + controles de UI
+docs/superpowers/  specs y planes (E1–E5)
 ```
 
 ## APIs externas (públicas, sin key)
 
 | Servicio | Uso | Nota |
 |----------|-----|------|
-| OpenStreetMap tiles | mapa base | atribución obligatoria |
-| BRouter | ruteo bici/pie + elevación | API pública |
+| OpenStreetMap / Esri / OpenTopoMap / CyclOSM | tiles base | atribución obligatoria |
+| BRouter | ruteo + alternativas + elevación + superficie | API pública |
 | Nominatim | búsqueda de lugares | máx 1 req/s; con debounce |
+| Overpass (mirror Kumi) | POIs (agua, refugios, bici) | con debounce y límite de área |
 
 ## Deploy
 
