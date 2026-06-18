@@ -1,4 +1,5 @@
 export type LatLng = { lat: number; lng: number };
+export type BBox = { south: number; west: number; north: number; east: number };
 export type RoutePoint = LatLng & { ele?: number };
 export type Profile = "bike" | "mtb" | "foot";
 export type Mode = "auto" | "manual";

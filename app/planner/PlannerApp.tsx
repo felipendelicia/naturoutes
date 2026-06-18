@@ -11,6 +11,7 @@ import SearchBox from "./SearchBox";
 import ProfilePicker from "./ProfilePicker";
 import LayerSwitcher from "./LayerSwitcher";
 import { useLayer } from "./useLayer";
+import { usePois } from "./usePois";
 import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
@@ -26,7 +27,7 @@ import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
 import { directionsUrl } from "@/lib/io/googleMaps";
 import type { SavedRoute } from "@/lib/store/routeStore";
-import type { LatLng, Mode } from "@/lib/types";
+import type { BBox, LatLng, Mode } from "@/lib/types";
 
 const CENTER = { lat: 40.4168, lng: -3.7038 }; // Madrid
 
@@ -87,6 +88,8 @@ export default function PlannerApp() {
   const geo = useGeolocation();
   const saved = useSavedRoutes();
   const layer = useLayer();
+  const [bbox, setBbox] = useState<BBox | null>(null);
+  const pois = usePois(bbox);
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
@@ -196,10 +199,12 @@ export default function PlannerApp() {
           hoverPoint={hoverPoint}
           measurePoints={measurePoints}
           baseLayer={layer.layer}
+          pois={pois.pois}
           onMapClick={handleMapClick}
           onMoveWaypoint={planner.moveWaypoint}
           onInsertWaypoint={handleInsertWaypoint}
           onDeleteWaypoint={planner.removeWaypoint}
+          onBoundsChange={setBbox}
           center={initialCenter}
           zoom={13}
           flyTo={searchTarget}
@@ -241,7 +246,12 @@ export default function PlannerApp() {
         </div>
 
         <div className="flex items-center gap-2">
-          <LayerSwitcher value={layer.id} onChange={layer.setId} />
+          <LayerSwitcher
+            value={layer.id}
+            onChange={layer.setId}
+            poisEnabled={pois.enabled}
+            onTogglePois={pois.toggle}
+          />
           <ProfilePicker value={state.profile} onChange={planner.setProfile} />
         </div>
        </div>

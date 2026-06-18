@@ -6,9 +6,13 @@ import { BASE_LAYERS } from "@/lib/map/layers";
 export default function LayerSwitcher({
   value,
   onChange,
+  poisEnabled,
+  onTogglePois,
 }: {
   value: string;
   onChange: (id: string) => void;
+  poisEnabled: boolean;
+  onTogglePois: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -57,6 +61,23 @@ export default function LayerSwitcher({
                 </li>
               );
             })}
+            <li className="my-1 border-t border-pine/10" />
+            <li>
+              <button
+                onClick={() => {
+                  onTogglePois();
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-between px-3 py-2 text-left text-sm text-pine transition hover:bg-pine/8"
+              >
+                <span>Puntos de interés</span>
+                <span
+                  className={`h-2.5 w-2.5 rounded-full ${
+                    poisEnabled ? "bg-blaze" : "bg-pine/20"
+                  }`}
+                />
+              </button>
+            </li>
           </ul>
         </>
       )}

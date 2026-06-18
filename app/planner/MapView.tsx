@@ -7,14 +7,24 @@ import {
   CircleMarker,
   Circle,
   Marker,
+  Popup,
   useMapEvents,
   useMap,
 } from "react-leaflet";
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { LatLng, Route } from "@/lib/types";
+import type { LatLng, BBox, Route } from "@/lib/types";
 import { layerById, type BaseLayer } from "@/lib/map/layers";
+import type { Poi, PoiKind } from "@/lib/poi/overpass";
+
+const POI_STYLE: Record<PoiKind | "other", { color: string; label: string }> = {
+  water: { color: "#0e7490", label: "Agua" },
+  shelter: { color: "#7c5e10", label: "Refugio" },
+  bicycle_parking: { color: "#3f6212", label: "Estacionamiento bici" },
+  bicycle_shop: { color: "#9d174d", label: "Bicicletería" },
+  other: { color: "#2f4338", label: "POI" },
+};
 
 export type Ring = { id: string; center: LatLng; radiusKm: number };
 
@@ -26,6 +36,26 @@ const waypointIcon = L.divIcon({
   iconSize: [15, 15],
   iconAnchor: [7.5, 7.5],
 });
+
+function BoundsEmitter({ onChange }: { onChange?: (b: BBox) => void }) {
+  const map = useMap();
+  const emit = () => {
+    if (!onChange) return;
+    const b = map.getBounds();
+    onChange({
+      south: b.getSouth(),
+      west: b.getWest(),
+      north: b.getNorth(),
+      east: b.getEast(),
+    });
+  };
+  useMapEvents({ moveend: emit, zoomend: emit });
+  useEffect(() => {
+    emit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [map]);
+  return null;
+}
 
 function ClickHandler({ onMapClick }: { onMapClick: (p: LatLng) => void }) {
   useMapEvents({
@@ -108,10 +138,12 @@ export default function MapView({
   hoverPoint = null,
   measurePoints = [],
   baseLayer = layerById("osm"),
+  pois = [],
   onMapClick,
   onMoveWaypoint,
   onInsertWaypoint,
   onDeleteWaypoint,
+  onBoundsChange,
   center,
   zoom,
   flyTo = null,
@@ -125,10 +157,12 @@ export default function MapView({
   hoverPoint?: LatLng | null;
   measurePoints?: LatLng[];
   baseLayer?: BaseLayer;
+  pois?: Poi[];
   onMapClick: (p: LatLng) => void;
   onMoveWaypoint?: (index: number, point: LatLng) => void;
   onInsertWaypoint?: (point: LatLng) => void;
   onDeleteWaypoint?: (index: number) => void;
+  onBoundsChange?: (b: BBox) => void;
   center: LatLng;
   zoom: number;
   flyTo?: LatLng | null;
@@ -165,6 +199,29 @@ export default function MapView({
       <FlyTo target={flyTo} />
       <FitRing ring={fitRing} />
       <TrackpadGestures />
+      <BoundsEmitter onChange={onBoundsChange} />
+
+      {pois.map((p) => {
+        const style = POI_STYLE[p.kind];
+        return (
+          <CircleMarker
+            key={p.id}
+            center={[p.lat, p.lng]}
+            radius={5}
+            pathOptions={{
+              color: "#f3efe4",
+              weight: 1.5,
+              fillColor: style.color,
+              fillOpacity: 1,
+            }}
+          >
+            <Popup>
+              <strong>{style.label}</strong>
+              {p.name ? ` · ${p.name}` : ""}
+            </Popup>
+          </CircleMarker>
+        );
+      })}
 
       {rings.map((r) => (
         <Circle
