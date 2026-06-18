@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LatLng } from "@/lib/types";
+import { saveLastLocation } from "./lastLocation";
 
 export type GeoFix = LatLng & { accuracy: number };
 
@@ -38,6 +39,8 @@ export function useGeolocation() {
         setPosition((prev) =>
           !prev || fix.accuracy <= prev.accuracy ? fix : prev,
         );
+        // Remember it so the next visit starts here instead of Madrid.
+        saveLastLocation({ lat: fix.lat, lng: fix.lng });
         // Recenter the map only once per locate request.
         if (!centered) {
           centered = true;

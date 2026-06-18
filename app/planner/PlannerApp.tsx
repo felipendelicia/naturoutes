@@ -11,6 +11,7 @@ import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
 import PwaRegister from "./PwaRegister";
 import { downloadText } from "./download";
+import { loadLastLocation } from "./lastLocation";
 import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
 import { directionsUrl } from "@/lib/io/googleMaps";
@@ -69,6 +70,8 @@ export default function PlannerApp() {
   const saved = useSavedRoutes();
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  // Start where we last were (persisted), then live GPS recenters precisely.
+  const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
   const { state, route, loading } = planner;
 
   const dist = formatDistance(route?.distanceMeters ?? 0);
@@ -132,7 +135,7 @@ export default function PlannerApp() {
           userPosition={geo.position}
           recenter={geo.centerTarget}
           onMapClick={planner.addWaypoint}
-          center={geo.position ?? CENTER}
+          center={initialCenter}
           zoom={13}
           flyTo={searchTarget}
         />
