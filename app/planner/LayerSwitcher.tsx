@@ -8,11 +8,13 @@ export default function LayerSwitcher({
   onChange,
   poisEnabled,
   onTogglePois,
+  onOpenOffline,
 }: {
   value: string;
   onChange: (id: string) => void;
   poisEnabled: boolean;
   onTogglePois: () => void;
+  onOpenOffline: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -76,6 +78,17 @@ export default function LayerSwitcher({
                     poisEnabled ? "bg-blaze" : "bg-pine/20"
                   }`}
                 />
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => {
+                  onOpenOffline();
+                  setOpen(false);
+                }}
+                className="block w-full px-3 py-2 text-left text-sm text-pine transition hover:bg-pine/8"
+              >
+                Mapa offline…
               </button>
             </li>
           </ul>

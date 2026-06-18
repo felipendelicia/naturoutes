@@ -12,6 +12,8 @@ import ProfilePicker from "./ProfilePicker";
 import LayerSwitcher from "./LayerSwitcher";
 import { useLayer } from "./useLayer";
 import { usePois } from "./usePois";
+import { useOnline } from "./useOnline";
+import OfflinePanel from "./OfflinePanel";
 import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
@@ -88,8 +90,10 @@ export default function PlannerApp() {
   const geo = useGeolocation();
   const saved = useSavedRoutes();
   const layer = useLayer();
-  const [bbox, setBbox] = useState<BBox | null>(null);
-  const pois = usePois(bbox);
+  const online = useOnline();
+  const [view, setView] = useState<{ bbox: BBox; zoom: number } | null>(null);
+  const pois = usePois(view?.bbox ?? null);
+  const [offlineOpen, setOfflineOpen] = useState(false);
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
@@ -204,7 +208,7 @@ export default function PlannerApp() {
           onMoveWaypoint={planner.moveWaypoint}
           onInsertWaypoint={handleInsertWaypoint}
           onDeleteWaypoint={planner.removeWaypoint}
-          onBoundsChange={setBbox}
+          onBoundsChange={(b, z) => setView({ bbox: b, zoom: z })}
           center={initialCenter}
           zoom={13}
           flyTo={searchTarget}
@@ -251,6 +255,7 @@ export default function PlannerApp() {
             onChange={layer.setId}
             poisEnabled={pois.enabled}
             onTogglePois={pois.toggle}
+            onOpenOffline={() => setOfflineOpen(true)}
           />
           <ProfilePicker value={state.profile} onChange={planner.setProfile} />
         </div>
@@ -455,6 +460,22 @@ export default function PlannerApp() {
         onLoad={handleLoad}
         onDelete={saved.remove}
       />
+
+      <OfflinePanel
+        open={offlineOpen}
+        onClose={() => setOfflineOpen(false)}
+        bbox={view?.bbox ?? null}
+        baseZoom={view?.zoom ?? 13}
+        baseLayer={layer.layer}
+      />
+
+      {!online && (
+        <div className="pointer-events-none absolute left-1/2 top-32 z-[1100] -translate-x-1/2">
+          <span className="rounded-full bg-pine px-3 py-1 text-xs font-medium text-paper shadow-lg">
+            Sin conexión · mapa offline
+          </span>
+        </div>
+      )}
     </div>
   );
 }

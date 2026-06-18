@@ -1,7 +1,8 @@
 // naturoutes service worker — app shell + tile caching for offline use.
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL_CACHE = `naturoutes-shell-${VERSION}`;
 const TILE_CACHE = `naturoutes-tiles-${VERSION}`;
+const OFFLINE_CACHE = "naturoutes-tiles-offline"; // user-downloaded areas (version-independent)
 const BASE = new URL(self.registration.scope).pathname; // "/" or "/naturoutes/"
 
 self.addEventListener("install", (event) => {
@@ -24,7 +25,7 @@ self.addEventListener("activate", (event) => {
       const keys = await caches.keys();
       await Promise.all(
         keys
-          .filter((k) => !k.endsWith(VERSION))
+          .filter((k) => !k.endsWith(VERSION) && k !== OFFLINE_CACHE)
           .map((k) => caches.delete(k)),
       );
       await self.clients.claim();
@@ -37,9 +38,12 @@ self.addEventListener("fetch", (event) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // OSM tiles → stale-while-revalidate.
-  if (url.hostname.endsWith("tile.openstreetmap.org")) {
-    event.respondWith(staleWhileRevalidate(req, TILE_CACHE));
+  // Cross-origin map tiles (images) → downloaded-offline cache first, then SWR.
+  // Other cross-origin GETs (BRouter/Nominatim/Overpass) fall through to network.
+  if (url.origin !== self.location.origin) {
+    if (req.destination === "image") {
+      event.respondWith(offlineFirst(req));
+    }
     return;
   }
 
@@ -62,6 +66,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(cacheFirst(req, SHELL_CACHE));
   }
 });
+
+async function offlineFirst(req) {
+  const offline = await caches.open(OFFLINE_CACHE);
+  const hit = await offline.match(req);
+  if (hit) return hit;
+  return staleWhileRevalidate(req, TILE_CACHE);
+}
 
 async function staleWhileRevalidate(req, cacheName) {
   const cache = await caches.open(cacheName);

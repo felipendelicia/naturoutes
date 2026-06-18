@@ -37,17 +37,24 @@ const waypointIcon = L.divIcon({
   iconAnchor: [7.5, 7.5],
 });
 
-function BoundsEmitter({ onChange }: { onChange?: (b: BBox) => void }) {
+function BoundsEmitter({
+  onChange,
+}: {
+  onChange?: (b: BBox, zoom: number) => void;
+}) {
   const map = useMap();
   const emit = () => {
     if (!onChange) return;
     const b = map.getBounds();
-    onChange({
-      south: b.getSouth(),
-      west: b.getWest(),
-      north: b.getNorth(),
-      east: b.getEast(),
-    });
+    onChange(
+      {
+        south: b.getSouth(),
+        west: b.getWest(),
+        north: b.getNorth(),
+        east: b.getEast(),
+      },
+      map.getZoom(),
+    );
   };
   useMapEvents({ moveend: emit, zoomend: emit });
   useEffect(() => {
@@ -162,7 +169,7 @@ export default function MapView({
   onMoveWaypoint?: (index: number, point: LatLng) => void;
   onInsertWaypoint?: (point: LatLng) => void;
   onDeleteWaypoint?: (index: number) => void;
-  onBoundsChange?: (b: BBox) => void;
+  onBoundsChange?: (b: BBox, zoom: number) => void;
   center: LatLng;
   zoom: number;
   flyTo?: LatLng | null;
