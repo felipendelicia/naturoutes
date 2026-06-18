@@ -13,8 +13,8 @@ export function usePlanner() {
 
   useEffect(() => {
     const id = ++reqId.current;
-    setLoading(true);
     const t = setTimeout(() => {
+      setLoading(true);
       computeRoute(state.waypoints, {
         mode: state.mode,
         profile: state.profile,

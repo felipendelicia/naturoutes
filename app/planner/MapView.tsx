@@ -62,7 +62,14 @@ export default function MapView({
       {route && route.geometry.length >= 2 && (
         <Polyline
           positions={route.geometry.map((p) => [p.lat, p.lng])}
-          pathOptions={{ weight: 5 }}
+          pathOptions={{
+            color: route.fallback ? "#c44d1d" : "#e6612b",
+            weight: 5,
+            opacity: 0.95,
+            dashArray: route.fallback ? "2 8" : undefined,
+            lineCap: "round",
+            lineJoin: "round",
+          }}
         />
       )}
 
@@ -71,18 +78,24 @@ export default function MapView({
           key={i}
           center={[w.lat, w.lng]}
           radius={6}
-          pathOptions={{ fillOpacity: 1 }}
+          pathOptions={{
+            color: "#f3efe4",
+            weight: 2,
+            fillColor: "#16271d",
+            fillOpacity: 1,
+          }}
         />
       ))}
 
       {userPosition && (
         <CircleMarker
           center={[userPosition.lat, userPosition.lng]}
-          radius={8}
+          radius={7}
           pathOptions={{
-            color: "#2563eb",
-            fillColor: "#2563eb",
-            fillOpacity: 0.9,
+            color: "#f3efe4",
+            weight: 3,
+            fillColor: "#0e7490",
+            fillOpacity: 1,
           }}
         />
       )}
