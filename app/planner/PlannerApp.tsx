@@ -9,6 +9,8 @@ import RadiusControl from "./RadiusControl";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
 import ProfilePicker from "./ProfilePicker";
+import LayerSwitcher from "./LayerSwitcher";
+import { useLayer } from "./useLayer";
 import AlternativesBar from "./AlternativesBar";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
@@ -84,6 +86,7 @@ export default function PlannerApp() {
   const planner = usePlanner();
   const geo = useGeolocation();
   const saved = useSavedRoutes();
+  const layer = useLayer();
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
@@ -192,6 +195,7 @@ export default function PlannerApp() {
           fitRing={lastRing}
           hoverPoint={hoverPoint}
           measurePoints={measurePoints}
+          baseLayer={layer.layer}
           onMapClick={handleMapClick}
           onMoveWaypoint={planner.moveWaypoint}
           onInsertWaypoint={handleInsertWaypoint}
@@ -236,7 +240,10 @@ export default function PlannerApp() {
           </span>
         </div>
 
-        <ProfilePicker value={state.profile} onChange={planner.setProfile} />
+        <div className="flex items-center gap-2">
+          <LayerSwitcher value={layer.id} onChange={layer.setId} />
+          <ProfilePicker value={state.profile} onChange={planner.setProfile} />
+        </div>
        </div>
        <SearchBox
          origin={geo.position ?? CENTER}

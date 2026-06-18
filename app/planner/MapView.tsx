@@ -14,6 +14,7 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { LatLng, Route } from "@/lib/types";
+import { layerById, type BaseLayer } from "@/lib/map/layers";
 
 export type Ring = { id: string; center: LatLng; radiusKm: number };
 
@@ -106,6 +107,7 @@ export default function MapView({
   fitRing = null,
   hoverPoint = null,
   measurePoints = [],
+  baseLayer = layerById("osm"),
   onMapClick,
   onMoveWaypoint,
   onInsertWaypoint,
@@ -122,6 +124,7 @@ export default function MapView({
   fitRing?: Ring | null;
   hoverPoint?: LatLng | null;
   measurePoints?: LatLng[];
+  baseLayer?: BaseLayer;
   onMapClick: (p: LatLng) => void;
   onMoveWaypoint?: (index: number, point: LatLng) => void;
   onInsertWaypoint?: (point: LatLng) => void;
@@ -143,9 +146,11 @@ export default function MapView({
       zoomSnap={0}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
+        key={baseLayer.id}
+        attribution={baseLayer.attribution}
+        url={baseLayer.url}
+        maxZoom={baseLayer.maxZoom}
+        {...(baseLayer.subdomains ? { subdomains: baseLayer.subdomains } : {})}
       />
       <ClickHandler
         onMapClick={(p) => {
