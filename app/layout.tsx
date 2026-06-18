@@ -14,9 +14,12 @@ const dmMono = DM_Mono({
   weight: ["400", "500"],
 });
 
+const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 export const metadata: Metadata = {
   title: "naturoutes",
   description: "Planificá rutas de bici y caminata sobre el mapa.",
+  icons: { icon: [{ url: `${base}/icon.svg`, type: "image/svg+xml" }] },
   appleWebApp: { capable: true, title: "naturoutes", statusBarStyle: "black-translucent" },
 };
 
