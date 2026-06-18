@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Archivo, DM_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -17,6 +17,14 @@ const dmMono = DM_Mono({
 export const metadata: Metadata = {
   title: "naturoutes",
   description: "Planificá rutas de bici y caminata sobre el mapa.",
+  appleWebApp: { capable: true, title: "naturoutes", statusBarStyle: "black-translucent" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#16271d",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

@@ -4,13 +4,16 @@ import type { NextConfig } from "next";
 // El workflow de deploy setea GITHUB_PAGES=true; en local queda en root.
 const isGithubPages = process.env.GITHUB_PAGES === "true";
 const repo = "naturoutes";
+const basePath = isGithubPages ? `/${repo}` : "";
 
 const nextConfig: NextConfig = {
   output: "export",
   trailingSlash: true,
   images: { unoptimized: true },
-  basePath: isGithubPages ? `/${repo}` : undefined,
+  basePath: basePath || undefined,
   assetPrefix: isGithubPages ? `/${repo}/` : undefined,
+  // Exposed to client + manifest so PWA paths respect the GitHub Pages basePath.
+  env: { NEXT_PUBLIC_BASE_PATH: basePath },
 };
 
 export default nextConfig;

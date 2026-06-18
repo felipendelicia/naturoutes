@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="naturoutes">
+  <rect width="512" height="512" fill="#16271d"/>
+  <g fill="none" stroke-linecap="round">
+    <path d="M96 320c80-20 110-150 192-150s120 70 196 50" stroke="#5c6f4f" stroke-width="22"/>
+    <path d="M96 250c80-20 110-110 192-110s120 64 196 44" stroke="#f3efe4" stroke-width="22" opacity="0.9"/>
+    <path d="M96 392c80-18 120-70 200-70" stroke="#2f4338" stroke-width="22"/>
+  </g>
+  <circle cx="332" cy="150" r="46" fill="#e6612b"/>
+  <circle cx="332" cy="150" r="18" fill="#16271d"/>
+</svg>

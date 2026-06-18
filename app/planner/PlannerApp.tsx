@@ -9,6 +9,7 @@ import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
 import RoutesSheet from "./RoutesSheet";
 import RouteMenu from "./RouteMenu";
+import PwaRegister from "./PwaRegister";
 import { downloadText } from "./download";
 import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
@@ -117,6 +118,7 @@ export default function PlannerApp() {
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-paper-deep">
+      <PwaRegister />
       <div className="absolute inset-0">
         <MapView
           route={route}
