@@ -6,9 +6,7 @@ import type { Profile } from "@/lib/types";
 
 const EMOJI: Record<Profile, string> = {
   bike: "🚲",
-  "bike-fast": "⚡",
   mtb: "⛰️",
-  gravel: "🌾",
   foot: "🥾",
 };
 

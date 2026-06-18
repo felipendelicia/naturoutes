@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PROFILES, profileDef, brouterProfile } from "./profiles";
 import type { Profile } from "../types";
 
-const ALL: Profile[] = ["bike", "bike-fast", "mtb", "gravel", "foot"];
+const ALL: Profile[] = ["bike", "mtb", "foot"];
 
 describe("PROFILES", () => {
   it("has a definition for every Profile id", () => {
@@ -21,7 +21,7 @@ describe("PROFILES", () => {
 
 describe("profileDef / brouterProfile", () => {
   it("maps known ids", () => {
-    expect(brouterProfile("bike")).toBe("trekking");
+    expect(brouterProfile("bike")).toBe("fastbike");
     expect(brouterProfile("foot")).toBe("hiking-mountain");
     expect(profileDef("mtb").travel).toBe("bicycling");
     expect(profileDef("foot").travel).toBe("walking");

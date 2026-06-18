@@ -11,10 +11,9 @@ export type ProfileDef = {
 };
 
 export const PROFILES: ProfileDef[] = [
-  { id: "bike", label: "Bici", brouter: "trekking", travel: "bicycling", speedKmh: 18 },
-  { id: "bike-fast", label: "Bici rápida", brouter: "fastbike", travel: "bicycling", speedKmh: 25 },
+  // "Bici" prioritises asphalt (BRouter fastbike strongly prefers paved roads).
+  { id: "bike", label: "Bici", brouter: "fastbike", travel: "bicycling", speedKmh: 20 },
   { id: "mtb", label: "MTB", brouter: "mtb", travel: "bicycling", speedKmh: 14 },
-  { id: "gravel", label: "Gravel", brouter: "gravel", travel: "bicycling", speedKmh: 16 },
   { id: "foot", label: "Caminar", brouter: "hiking-mountain", travel: "walking", speedKmh: 4.5 },
 ];
 
