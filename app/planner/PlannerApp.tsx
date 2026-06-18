@@ -15,6 +15,7 @@ import RouteMenu from "./RouteMenu";
 import PwaRegister from "./PwaRegister";
 import { downloadText } from "./download";
 import { loadLastLocation } from "./lastLocation";
+import { nearestSegmentIndex } from "@/lib/geo/segment";
 import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
 import { directionsUrl } from "@/lib/io/googleMaps";
@@ -139,6 +140,15 @@ export default function PlannerApp() {
     ]);
   }
 
+  function handleInsertWaypoint(point: LatLng) {
+    if (state.waypoints.length < 2) {
+      planner.addWaypoint(point);
+      return;
+    }
+    const i = nearestSegmentIndex(state.waypoints, point);
+    planner.insertWaypoint(i + 1, point);
+  }
+
   function handleImport(text: string) {
     const { waypoints, dense } = fromGpx(text);
     if (waypoints.length < 2) {
@@ -160,6 +170,9 @@ export default function PlannerApp() {
           recenter={geo.centerTarget}
           rings={rings}
           onMapClick={planner.addWaypoint}
+          onMoveWaypoint={planner.moveWaypoint}
+          onInsertWaypoint={handleInsertWaypoint}
+          onDeleteWaypoint={planner.removeWaypoint}
           center={initialCenter}
           zoom={13}
           flyTo={searchTarget}
@@ -287,6 +300,7 @@ export default function PlannerApp() {
                 canExport={canSave}
                 onSave={handleSave}
                 onOpenSaved={() => setSheetOpen(true)}
+                onReverse={planner.reverse}
                 onExportGpx={handleExportGpx}
                 onExportKml={handleExportKml}
                 onOpenGoogleMaps={handleGoogleMaps}

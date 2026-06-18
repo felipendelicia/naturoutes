@@ -36,6 +36,38 @@ describe("plannerReducer", () => {
     expect(s.profile).toBe("foot");
   });
 
+  it("reverse flips waypoint order", () => {
+    let s = plannerReducer(initialPlannerState, { type: "add", point: { lat: 1, lng: 1 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 2, lng: 2 } });
+    s = plannerReducer(s, { type: "reverse" });
+    expect(s.waypoints).toEqual([{ lat: 2, lng: 2 }, { lat: 1, lng: 1 }]);
+  });
+
+  it("move replaces the waypoint at an index", () => {
+    let s = plannerReducer(initialPlannerState, { type: "add", point: { lat: 1, lng: 1 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 2, lng: 2 } });
+    s = plannerReducer(s, { type: "move", index: 1, point: { lat: 9, lng: 9 } });
+    expect(s.waypoints[1]).toEqual({ lat: 9, lng: 9 });
+  });
+
+  it("insert adds a waypoint at an index", () => {
+    let s = plannerReducer(initialPlannerState, { type: "add", point: { lat: 1, lng: 1 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 3, lng: 3 } });
+    s = plannerReducer(s, { type: "insert", index: 1, point: { lat: 2, lng: 2 } });
+    expect(s.waypoints).toEqual([
+      { lat: 1, lng: 1 },
+      { lat: 2, lng: 2 },
+      { lat: 3, lng: 3 },
+    ]);
+  });
+
+  it("removeAt removes the waypoint at an index", () => {
+    let s = plannerReducer(initialPlannerState, { type: "add", point: { lat: 1, lng: 1 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 2, lng: 2 } });
+    s = plannerReducer(s, { type: "removeAt", index: 0 });
+    expect(s.waypoints).toEqual([{ lat: 2, lng: 2 }]);
+  });
+
   it("load replaces waypoints, mode and profile at once", () => {
     const wps = [
       { lat: 1, lng: 1 },

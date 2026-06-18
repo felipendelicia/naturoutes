@@ -6,14 +6,25 @@ import {
   Polyline,
   CircleMarker,
   Circle,
+  Marker,
   useMapEvents,
   useMap,
 } from "react-leaflet";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { LatLng, Route } from "@/lib/types";
 
 export type Ring = { id: string; center: LatLng; radiusKm: number };
+
+const waypointIcon = L.divIcon({
+  className: "naturoutes-wp",
+  html:
+    '<span style="display:block;width:15px;height:15px;border-radius:50%;' +
+    'background:#16271d;border:2px solid #f3efe4;box-shadow:0 1px 3px rgba(0,0,0,.45)"></span>',
+  iconSize: [15, 15],
+  iconAnchor: [7.5, 7.5],
+});
 
 function ClickHandler({ onMapClick }: { onMapClick: (p: LatLng) => void }) {
   useMapEvents({
@@ -80,6 +91,9 @@ export default function MapView({
   recenter = null,
   rings = [],
   onMapClick,
+  onMoveWaypoint,
+  onInsertWaypoint,
+  onDeleteWaypoint,
   center,
   zoom,
   flyTo = null,
@@ -90,10 +104,16 @@ export default function MapView({
   recenter?: LatLng | null;
   rings?: Ring[];
   onMapClick: (p: LatLng) => void;
+  onMoveWaypoint?: (index: number, point: LatLng) => void;
+  onInsertWaypoint?: (point: LatLng) => void;
+  onDeleteWaypoint?: (index: number) => void;
   center: LatLng;
   zoom: number;
   flyTo?: LatLng | null;
 }) {
+  // A click on the route line inserts a point; suppress the map click that follows.
+  const skipMapClick = useRef(false);
+
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -108,7 +128,15 @@ export default function MapView({
         url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxZoom={19}
       />
-      <ClickHandler onMapClick={onMapClick} />
+      <ClickHandler
+        onMapClick={(p) => {
+          if (skipMapClick.current) {
+            skipMapClick.current = false;
+            return;
+          }
+          onMapClick(p);
+        }}
+      />
       <RecenterOnUser position={recenter} />
       <FlyTo target={flyTo} />
       <TrackpadGestures />
@@ -138,19 +166,31 @@ export default function MapView({
             lineCap: "round",
             lineJoin: "round",
           }}
+          eventHandlers={
+            onInsertWaypoint
+              ? {
+                  click: (e) => {
+                    skipMapClick.current = true;
+                    onInsertWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+                  },
+                }
+              : undefined
+          }
         />
       )}
 
       {waypoints.map((w, i) => (
-        <CircleMarker
+        <Marker
           key={i}
-          center={[w.lat, w.lng]}
-          radius={6}
-          pathOptions={{
-            color: "#f3efe4",
-            weight: 2,
-            fillColor: "#16271d",
-            fillOpacity: 1,
+          position={[w.lat, w.lng]}
+          icon={waypointIcon}
+          draggable={!!onMoveWaypoint}
+          eventHandlers={{
+            dragend: (e) => {
+              const ll = (e.target as L.Marker).getLatLng();
+              onMoveWaypoint?.(i, { lat: ll.lat, lng: ll.lng });
+            },
+            contextmenu: () => onDeleteWaypoint?.(i),
           }}
         />
       ))}

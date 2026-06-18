@@ -6,6 +6,7 @@ export default function RouteMenu({
   canExport,
   onSave,
   onOpenSaved,
+  onReverse,
   onExportGpx,
   onExportKml,
   onOpenGoogleMaps,
@@ -14,6 +15,7 @@ export default function RouteMenu({
   canExport: boolean;
   onSave: () => void;
   onOpenSaved: () => void;
+  onReverse: () => void;
   onExportGpx: () => void;
   onExportKml: () => void;
   onOpenGoogleMaps: () => void;
@@ -37,6 +39,7 @@ export default function RouteMenu({
   const items: { label: string; onClick: () => void; disabled?: boolean }[] = [
     { label: "Guardar ruta", onClick: onSave, disabled: !canExport },
     { label: "Rutas guardadas", onClick: onOpenSaved },
+    { label: "Invertir ruta", onClick: onReverse, disabled: !canExport },
     { label: "Exportar GPX", onClick: onExportGpx, disabled: !canExport },
     { label: "Exportar KML", onClick: onExportKml, disabled: !canExport },
     { label: "Abrir en Google Maps", onClick: onOpenGoogleMaps, disabled: !canExport },

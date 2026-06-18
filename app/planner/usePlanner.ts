@@ -49,5 +49,11 @@ export function usePlanner() {
     setProfile: (p: Profile) => dispatch({ type: "setProfile", profile: p }),
     load: (waypoints: LatLng[], mode: Mode, profile: Profile) =>
       dispatch({ type: "load", waypoints, mode, profile }),
+    reverse: () => dispatch({ type: "reverse" }),
+    moveWaypoint: (index: number, point: LatLng) =>
+      dispatch({ type: "move", index, point }),
+    insertWaypoint: (index: number, point: LatLng) =>
+      dispatch({ type: "insert", index, point }),
+    removeWaypoint: (index: number) => dispatch({ type: "removeAt", index }),
   };
 }

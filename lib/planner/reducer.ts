@@ -12,7 +12,11 @@ export type PlannerAction =
   | { type: "clear" }
   | { type: "setMode"; mode: Mode }
   | { type: "setProfile"; profile: Profile }
-  | { type: "load"; waypoints: LatLng[]; mode: Mode; profile: Profile };
+  | { type: "load"; waypoints: LatLng[]; mode: Mode; profile: Profile }
+  | { type: "reverse" }
+  | { type: "move"; index: number; point: LatLng }
+  | { type: "insert"; index: number; point: LatLng }
+  | { type: "removeAt"; index: number };
 
 export const initialPlannerState: PlannerState = {
   waypoints: [],
@@ -40,6 +44,29 @@ export function plannerReducer(
         waypoints: action.waypoints,
         mode: action.mode,
         profile: action.profile,
+      };
+    case "reverse":
+      return { ...state, waypoints: [...state.waypoints].reverse() };
+    case "move":
+      return {
+        ...state,
+        waypoints: state.waypoints.map((w, i) =>
+          i === action.index ? action.point : w,
+        ),
+      };
+    case "insert":
+      return {
+        ...state,
+        waypoints: [
+          ...state.waypoints.slice(0, action.index),
+          action.point,
+          ...state.waypoints.slice(action.index),
+        ],
+      };
+    case "removeAt":
+      return {
+        ...state,
+        waypoints: state.waypoints.filter((_, i) => i !== action.index),
       };
   }
 }
