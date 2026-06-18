@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { usePlanner } from "./usePlanner";
 import { useGeolocation } from "./useGeolocation";
 import MapView from "./MapView";
 import ElevationProfile from "./ElevationProfile";
-import type { Mode, Profile } from "@/lib/types";
+import SearchBox from "./SearchBox";
+import type { LatLng, Mode, Profile } from "@/lib/types";
 
 const CENTER = { lat: 40.4168, lng: -3.7038 }; // Madrid
 
@@ -55,6 +57,7 @@ function Segmented<T extends string>({
 export default function PlannerApp() {
   const planner = usePlanner();
   const geo = useGeolocation();
+  const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const { state, route, loading } = planner;
 
   const dist = formatDistance(route?.distanceMeters ?? 0);
@@ -70,11 +73,13 @@ export default function PlannerApp() {
           onMapClick={planner.addWaypoint}
           center={geo.position ?? CENTER}
           zoom={13}
+          flyTo={searchTarget}
         />
       </div>
 
       {/* ── Top bar ───────────────────────────────────────── */}
-      <header className="animate-drop pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-center justify-between gap-3 p-3">
+      <header className="animate-drop pointer-events-none absolute inset-x-0 top-0 z-[1000] flex flex-col gap-2 p-3">
+       <div className="flex items-center justify-between gap-3">
         <div className="panel pointer-events-auto flex items-center gap-2 rounded-2xl px-3 py-2">
           <svg
             width="22"
@@ -117,6 +122,8 @@ export default function PlannerApp() {
             ]}
           />
         </div>
+       </div>
+       <SearchBox onSelect={(p) => setSearchTarget({ lat: p.lat, lng: p.lng })} />
       </header>
 
       {/* ── Empty-state hint ──────────────────────────────── */}

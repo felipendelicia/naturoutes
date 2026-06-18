@@ -29,6 +29,14 @@ function RecenterOnUser({ position }: { position: LatLng | null }) {
   return null;
 }
 
+function FlyTo({ target }: { target: LatLng | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (target) map.flyTo([target.lat, target.lng], 14);
+  }, [target, map]);
+  return null;
+}
+
 export default function MapView({
   route,
   waypoints,
@@ -36,6 +44,7 @@ export default function MapView({
   onMapClick,
   center,
   zoom,
+  flyTo = null,
 }: {
   route: Route | null;
   waypoints: LatLng[];
@@ -43,6 +52,7 @@ export default function MapView({
   onMapClick: (p: LatLng) => void;
   center: LatLng;
   zoom: number;
+  flyTo?: LatLng | null;
 }) {
   return (
     <MapContainer
@@ -58,6 +68,7 @@ export default function MapView({
       />
       <ClickHandler onMapClick={onMapClick} />
       <RecenterOnUser position={userPosition} />
+      <FlyTo target={flyTo} />
 
       {route && route.geometry.length >= 2 && (
         <Polyline
