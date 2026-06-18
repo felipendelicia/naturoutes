@@ -83,6 +83,7 @@ export default function PlannerApp() {
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
+  const [hoverPoint, setHoverPoint] = useState<LatLng | null>(null);
   // Start where we last were (persisted), then live GPS recenters precisely.
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
   const { state, route, loading } = planner;
@@ -169,6 +170,7 @@ export default function PlannerApp() {
           userPosition={geo.position}
           recenter={geo.centerTarget}
           rings={rings}
+          hoverPoint={hoverPoint}
           onMapClick={planner.addWaypoint}
           onMoveWaypoint={planner.moveWaypoint}
           onInsertWaypoint={handleInsertWaypoint}
@@ -378,7 +380,7 @@ export default function PlannerApp() {
             </div>
           </div>
 
-          <ElevationProfile route={route} />
+          <ElevationProfile route={route} onHover={setHoverPoint} />
 
           <div className="mt-2 h-4 text-[11px] font-medium">
             {loading && (

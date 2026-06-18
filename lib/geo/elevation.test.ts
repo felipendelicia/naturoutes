@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { elevationProfile, buildElevationPaths } from "./elevation";
+import {
+  elevationProfile,
+  buildElevationPaths,
+  indexAtDistance,
+} from "./elevation";
 import type { RoutePoint } from "../types";
 
 const flat3: RoutePoint[] = [
@@ -59,5 +63,15 @@ describe("buildElevationPaths", () => {
     const { line, area } = buildElevationPaths(profile, 100, 40);
     expect(line).toBe("");
     expect(area).toBe("");
+  });
+});
+
+describe("indexAtDistance", () => {
+  it("returns the index of the closest cumulative distance", () => {
+    const profile = elevationProfile(flat3);
+    const last = profile.totalDistance;
+    expect(indexAtDistance(profile.points, 0)).toBe(0);
+    expect(indexAtDistance(profile.points, last)).toBe(2);
+    expect(indexAtDistance(profile.points, last / 2)).toBe(1);
   });
 });

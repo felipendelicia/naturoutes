@@ -90,6 +90,7 @@ export default function MapView({
   userPosition,
   recenter = null,
   rings = [],
+  hoverPoint = null,
   onMapClick,
   onMoveWaypoint,
   onInsertWaypoint,
@@ -103,6 +104,7 @@ export default function MapView({
   userPosition: (LatLng & { accuracy?: number }) | null;
   recenter?: LatLng | null;
   rings?: Ring[];
+  hoverPoint?: LatLng | null;
   onMapClick: (p: LatLng) => void;
   onMoveWaypoint?: (index: number, point: LatLng) => void;
   onInsertWaypoint?: (point: LatLng) => void;
@@ -194,6 +196,19 @@ export default function MapView({
           }}
         />
       ))}
+
+      {hoverPoint && (
+        <CircleMarker
+          center={[hoverPoint.lat, hoverPoint.lng]}
+          radius={7}
+          pathOptions={{
+            color: "#f3efe4",
+            weight: 3,
+            fillColor: "#e6612b",
+            fillOpacity: 1,
+          }}
+        />
+      )}
 
       {userPosition?.accuracy != null && userPosition.accuracy > 0 && (
         <Circle

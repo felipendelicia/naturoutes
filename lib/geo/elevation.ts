@@ -44,6 +44,23 @@ export function elevationProfile(
   return { points, min, max, totalDistance: cumulative };
 }
 
+/** Index of the elevation point whose cumulative distance is closest to `target`. */
+export function indexAtDistance(
+  points: ElevationPoint[],
+  target: number,
+): number {
+  let best = 0;
+  let bestD = Infinity;
+  for (let i = 0; i < points.length; i++) {
+    const d = Math.abs(points[i].d - target);
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
 function round(n: number): number {
   return Math.round(n * 100) / 100;
 }
