@@ -171,6 +171,13 @@ export default function PlannerApp() {
 
       {/* ── Top bar: wordmark · search · layers ───────────── */}
       <header className="animate-drop pointer-events-none absolute inset-x-0 top-0 z-[1000] flex items-center gap-2 p-3">
+        <div className="panel pointer-events-auto grid h-9 w-9 shrink-0 place-items-center rounded-2xl" aria-label="naturoutes">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M3 16c4-1 5-8 9-8s5 4 9 3" stroke="var(--moss)" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M3 12c4-1 5-6 9-6s5 3 9 2" stroke="var(--pine)" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="15" cy="6" r="2.1" fill="var(--blaze)" />
+          </svg>
+        </div>
         <SearchBox
           origin={geo.position ?? CENTER}
           onActivate={geo.locate}

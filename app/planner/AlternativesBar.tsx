@@ -18,7 +18,7 @@ export default function AlternativesBar({
   if (alternatives.length < 2) return null;
 
   return (
-    <div className="pointer-events-auto flex gap-1.5 overflow-x-auto pb-1">
+    <div className="pointer-events-auto mt-3 flex gap-1.5 overflow-x-auto pb-1">
       {alternatives.map((r, i) => {
         const active = i === selected;
         return (
