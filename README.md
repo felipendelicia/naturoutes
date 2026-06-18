@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# naturoutes
 
-## Getting Started
+Planificador de rutas de **bici y caminata** sobre un mapa. Web **100 % front**, sin
+backend: toda la lógica corre en el navegador. Mobile-first e instalable como PWA.
 
-First, run the development server:
+🔗 **En vivo:** https://felipendelicia.github.io/naturoutes/
+
+![Next.js](https://img.shields.io/badge/Next.js-16-black) ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue) ![Leaflet](https://img.shields.io/badge/Leaflet-OSM-green) ![GitHub Pages](https://img.shields.io/badge/deploy-GitHub%20Pages-222)
+
+## Qué hace
+
+- 🗺️ **Mapa** Leaflet + OpenStreetMap (sin API key). En trackpad: dos dedos = pan, pinch = zoom.
+- ✏️ **Trazado mixto**: tocá el mapa para agregar puntos.
+  - *Auto*: la ruta se ajusta a caminos según perfil **bici/pie** (vía [BRouter](https://brouter.de)), con **fallback** a línea recta si falla.
+  - *Manual*: líneas rectas entre puntos.
+- 📈 **Distancia** y **perfil de elevación** (altimetría desde BRouter).
+- 🔎 **Búsqueda de lugares** (Nominatim), ordenada por distancia a tu ubicación.
+- 📍 **GPS** para centrar en tu posición.
+- 💾 **Guardado local** de rutas en IndexedDB (sin servidor).
+- 📤 *(en progreso)* Export GPX/KML y "Abrir en Google Maps".
+- 📱 *(en progreso)* PWA instalable + offline.
+
+## Stack
+
+Next.js 16 (App Router, `output: 'export'`) · React 19 · TypeScript strict · Tailwind v4 ·
+Leaflet + react-leaflet · Vitest. Deploy estático en GitHub Pages.
+
+## Desarrollo
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
+npm test           # tests unitarios (lógica pura)
+npm run lint       # ESLint
+npm run build      # export estático -> out/
+npx serve out      # servir el build local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> No usa servidor: `next start` no aplica con `output: 'export'`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Arquitectura
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+La lógica pura vive en `lib/` (framework-free, testeada con Vitest); la UI en `app/planner/`
+(componentes client-only, el mapa toca `window`).
 
-## Learn More
+```
+lib/
+  geo/        haversine · elevación · geocoding
+  routing/    BRouter · manual · dispatcher con fallback
+  planner/    reducer de estado
+  store/      persistencia (KV inyectable + backend IndexedDB)
+  io/         export GPX/KML/Google Maps
+app/planner/  MapView, hooks (usePlanner, useGeolocation, useSavedRoutes) y UI
+docs/superpowers/  spec y plan de implementación
+```
 
-To learn more about Next.js, take a look at the following resources:
+## APIs externas (públicas, sin key)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Servicio | Uso | Nota |
+|----------|-----|------|
+| OpenStreetMap tiles | mapa base | atribución obligatoria |
+| BRouter | ruteo bici/pie + elevación | API pública |
+| Nominatim | búsqueda de lugares | máx 1 req/s; con debounce |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
+Push a `main` → GitHub Actions (`.github/workflows/deploy.yml`) hace `npm run build` y
+publica `out/` en Pages. En CI se setea `GITHUB_PAGES=true` para aplicar
+`basePath: /naturoutes`; en local queda en root.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Licencia
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Datos de mapa © colaboradores de OpenStreetMap.
