@@ -64,12 +64,52 @@ function BoundsEmitter({
   return null;
 }
 
-function ClickHandler({ onMapClick }: { onMapClick: (p: LatLng) => void }) {
-  useMapEvents({
-    click(e) {
-      onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
-    },
+// Adds a waypoint only on a deliberate tap on the base map: no movement (so
+// panning never adds a point) and not on a marker / route line.
+function TapHandler({ onTap }: { onTap: (p: LatLng) => void }) {
+  const map = useMap();
+  const cb = useRef(onTap);
+  useEffect(() => {
+    cb.current = onTap;
   });
+  useEffect(() => {
+    const el = map.getContainer();
+    let start: { x: number; y: number; t: number; moved: boolean } | null = null;
+    const onDown = (e: PointerEvent) => {
+      if (e.button > 0) return;
+      const target = e.target as Element;
+      if (target.closest(".leaflet-interactive, .leaflet-marker-icon")) {
+        start = null;
+        return;
+      }
+      start = { x: e.clientX, y: e.clientY, t: Date.now(), moved: false };
+    };
+    const onMove = (e: PointerEvent) => {
+      if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) {
+        start.moved = true;
+      }
+    };
+    const onUp = (e: PointerEvent) => {
+      const s = start;
+      start = null;
+      if (!s || s.moved || Date.now() - s.t > 500) return; // pan / long-press → ignore
+      const ll = map.mouseEventToLatLng(e as unknown as MouseEvent);
+      cb.current({ lat: ll.lat, lng: ll.lng });
+    };
+    const onCancel = () => {
+      start = null;
+    };
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onCancel);
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onCancel);
+    };
+  }, [map]);
   return null;
 }
 
@@ -174,9 +214,6 @@ export default function MapView({
   zoom: number;
   flyTo?: LatLng | null;
 }) {
-  // A click on the route line inserts a point; suppress the map click that follows.
-  const skipMapClick = useRef(false);
-
   return (
     <MapContainer
       center={[center.lat, center.lng]}
@@ -193,15 +230,7 @@ export default function MapView({
         maxZoom={baseLayer.maxZoom}
         {...(baseLayer.subdomains ? { subdomains: baseLayer.subdomains } : {})}
       />
-      <ClickHandler
-        onMapClick={(p) => {
-          if (skipMapClick.current) {
-            skipMapClick.current = false;
-            return;
-          }
-          onMapClick(p);
-        }}
-      />
+      <TapHandler onTap={onMapClick} />
       <RecenterOnUser position={recenter} />
       <FlyTo target={flyTo} />
       <FitRing ring={fitRing} />
@@ -258,10 +287,7 @@ export default function MapView({
           eventHandlers={
             onInsertWaypoint
               ? {
-                  click: (e) => {
-                    skipMapClick.current = true;
-                    onInsertWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng });
-                  },
+                  click: (e) => onInsertWaypoint({ lat: e.latlng.lat, lng: e.latlng.lng }),
                 }
               : undefined
           }
