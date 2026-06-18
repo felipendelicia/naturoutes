@@ -1,26 +1,60 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { LatLng } from "@/lib/types";
 
+export type GeoFix = LatLng & { accuracy: number };
+
 export function useGeolocation() {
-  const [position, setPosition] = useState<LatLng | null>(null);
+  const [position, setPosition] = useState<GeoFix | null>(null);
+  const [centerTarget, setCenterTarget] = useState<LatLng | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const watchId = useRef<number | null>(null);
+
+  const stop = useCallback(() => {
+    if (watchId.current != null) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+    }
+  }, []);
 
   const locate = useCallback(() => {
     if (!("geolocation" in navigator)) {
       setError("Geolocalización no disponible");
       return;
     }
-    navigator.geolocation.getCurrentPosition(
+    setError(null);
+    stop();
+    let centered = false;
+    const start = Date.now();
+    watchId.current = navigator.geolocation.watchPosition(
       (pos) => {
-        setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setError(null);
+        const fix: GeoFix = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        };
+        // Keep the most accurate fix seen this session for the marker.
+        setPosition((prev) =>
+          !prev || fix.accuracy <= prev.accuracy ? fix : prev,
+        );
+        // Recenter the map only once per locate request.
+        if (!centered) {
+          centered = true;
+          setCenterTarget({ lat: fix.lat, lng: fix.lng });
+        }
+        // Stop once accurate enough or after 15s of refining.
+        if (fix.accuracy <= 30 || Date.now() - start > 15000) stop();
       },
-      () => setError("No se pudo obtener tu ubicación"),
-      { enableHighAccuracy: true, timeout: 10000 },
+      () => {
+        setError("No se pudo obtener tu ubicación");
+        stop();
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
-  }, []);
+  }, [stop]);
 
-  return { position, error, locate };
+  useEffect(() => stop, [stop]);
+
+  return { position, centerTarget, error, locate };
 }

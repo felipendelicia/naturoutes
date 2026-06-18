@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePlanner } from "./usePlanner";
 import { useGeolocation } from "./useGeolocation";
 import { useSavedRoutes } from "./useSavedRoutes";
@@ -75,6 +75,12 @@ export default function PlannerApp() {
   const hasRoute = state.waypoints.length > 0;
   const canSave = state.waypoints.length >= 2;
 
+  // Locate the user on open so the map starts at their position, not Madrid.
+  const locate = geo.locate;
+  useEffect(() => {
+    locate();
+  }, [locate]);
+
   function handleSave() {
     if (!route || !canSave) return;
     const name = window.prompt("Nombre de la ruta:");
@@ -124,6 +130,7 @@ export default function PlannerApp() {
           route={route}
           waypoints={state.waypoints}
           userPosition={geo.position}
+          recenter={geo.centerTarget}
           onMapClick={planner.addWaypoint}
           center={geo.position ?? CENTER}
           zoom={13}

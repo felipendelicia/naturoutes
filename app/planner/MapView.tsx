@@ -5,6 +5,7 @@ import {
   TileLayer,
   Polyline,
   CircleMarker,
+  Circle,
   useMapEvents,
   useMap,
 } from "react-leaflet";
@@ -65,6 +66,7 @@ export default function MapView({
   route,
   waypoints,
   userPosition,
+  recenter = null,
   onMapClick,
   center,
   zoom,
@@ -72,7 +74,8 @@ export default function MapView({
 }: {
   route: Route | null;
   waypoints: LatLng[];
-  userPosition: LatLng | null;
+  userPosition: (LatLng & { accuracy?: number }) | null;
+  recenter?: LatLng | null;
   onMapClick: (p: LatLng) => void;
   center: LatLng;
   zoom: number;
@@ -93,7 +96,7 @@ export default function MapView({
         maxZoom={19}
       />
       <ClickHandler onMapClick={onMapClick} />
-      <RecenterOnUser position={userPosition} />
+      <RecenterOnUser position={recenter} />
       <FlyTo target={flyTo} />
       <TrackpadGestures />
 
@@ -124,6 +127,19 @@ export default function MapView({
           }}
         />
       ))}
+
+      {userPosition?.accuracy != null && userPosition.accuracy > 0 && (
+        <Circle
+          center={[userPosition.lat, userPosition.lng]}
+          radius={userPosition.accuracy}
+          pathOptions={{
+            color: "#0e7490",
+            weight: 1,
+            fillColor: "#0e7490",
+            fillOpacity: 0.12,
+          }}
+        />
+      )}
 
       {userPosition && (
         <CircleMarker
