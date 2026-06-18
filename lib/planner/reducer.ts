@@ -16,7 +16,8 @@ export type PlannerAction =
   | { type: "reverse" }
   | { type: "move"; index: number; point: LatLng }
   | { type: "insert"; index: number; point: LatLng }
-  | { type: "removeAt"; index: number };
+  | { type: "removeAt"; index: number }
+  | { type: "reorder"; from: number; to: number };
 
 export const initialPlannerState: PlannerState = {
   waypoints: [],
@@ -68,5 +69,11 @@ export function plannerReducer(
         ...state,
         waypoints: state.waypoints.filter((_, i) => i !== action.index),
       };
+    case "reorder": {
+      const wps = [...state.waypoints];
+      const [moved] = wps.splice(action.from, 1);
+      wps.splice(action.to, 0, moved);
+      return { ...state, waypoints: wps };
+    }
   }
 }

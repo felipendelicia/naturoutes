@@ -4,7 +4,7 @@ import { useRef, useState, type ReactNode, type PointerEvent } from "react";
 
 export type Snap = "peek" | "mid" | "full";
 
-const PEEK_PX = 128; // visible height at the lowest snap
+const PEEK_PX = 150; // visible height at the lowest snap
 const FULL_VH = 0.9; // sheet height as a fraction of the viewport
 const MID_VH = 0.46; // visible height at the middle snap
 
@@ -81,16 +81,18 @@ export default function BottomSheet({
         transition: dragT == null ? "transform .34s cubic-bezier(.22,1,.36,1)" : "none",
       }}
     >
+      {/* Grab strip: only this area drags / taps the sheet, so the header below
+          can hold interactive controls (profile picker, CTA) without conflict. */}
       <div
         onPointerDown={onDown}
         onPointerMove={onMove}
         onPointerUp={onUp}
         onPointerCancel={onUp}
-        className="shrink-0 cursor-grab touch-none px-4 pb-1 pt-2.5 active:cursor-grabbing"
+        className="shrink-0 cursor-grab touch-none pb-1 pt-2.5 active:cursor-grabbing"
       >
-        <div className="mx-auto mb-2 h-1.5 w-10 rounded-full bg-pine/20" />
-        {header}
+        <div className="mx-auto h-1.5 w-10 rounded-full bg-pine/20" />
       </div>
+      {header && <div className="shrink-0 px-4 pb-1">{header}</div>}
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {children}
       </div>

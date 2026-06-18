@@ -68,6 +68,18 @@ describe("plannerReducer", () => {
     expect(s.waypoints).toEqual([{ lat: 2, lng: 2 }]);
   });
 
+  it("reorder moves a waypoint from one index to another", () => {
+    let s = plannerReducer(initialPlannerState, { type: "add", point: { lat: 1, lng: 1 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 2, lng: 2 } });
+    s = plannerReducer(s, { type: "add", point: { lat: 3, lng: 3 } });
+    s = plannerReducer(s, { type: "reorder", from: 0, to: 2 });
+    expect(s.waypoints).toEqual([
+      { lat: 2, lng: 2 },
+      { lat: 3, lng: 3 },
+      { lat: 1, lng: 1 },
+    ]);
+  });
+
   it("load replaces waypoints, mode and profile at once", () => {
     const wps = [
       { lat: 1, lng: 1 },

@@ -55,5 +55,7 @@ export function usePlanner() {
     insertWaypoint: (index: number, point: LatLng) =>
       dispatch({ type: "insert", index, point }),
     removeWaypoint: (index: number) => dispatch({ type: "removeAt", index }),
+    reorderWaypoints: (from: number, to: number) =>
+      dispatch({ type: "reorder", from, to }),
   };
 }

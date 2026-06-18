@@ -109,55 +109,53 @@ export default function RouteSheet({
   const canSave = state.waypoints.length >= 2;
   const dist = fmtDist(route?.distanceMeters ?? 0);
 
-  const summary = (
+  const summary = hasRoute ? (
     <div className="flex items-end justify-between gap-3">
       <div className="flex flex-col">
-        {hasRoute ? (
-          <>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-mono text-3xl font-medium leading-none tracking-tight text-pine">
-                {dist.value}
-              </span>
-              <span className="text-base font-semibold uppercase text-moss">{dist.unit}</span>
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-[11px] font-medium text-moss">
-              {route?.timeSeconds != null && <span>~{fmtTime(route.timeSeconds)}</span>}
-              {route?.ascentMeters != null && route.ascentMeters > 0 && (
-                <span>↗ {Math.round(route.ascentMeters)} m</span>
-              )}
-              {route?.surface?.pavedRatio != null && (
-                <span>· {Math.round(route.surface.pavedRatio * 100)}% asfalto</span>
-              )}
-              {loading && <span className="text-moss/70">· calculando…</span>}
-            </div>
-          </>
-        ) : (
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.14em] text-pine">Nueva ruta</p>
-            <p className="mt-0.5 text-xs text-moss">Tocá el mapa o partí de tu ubicación.</p>
-          </div>
-        )}
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-mono text-3xl font-medium leading-none tracking-tight text-pine">
+            {dist.value}
+          </span>
+          <span className="text-base font-semibold uppercase text-moss">{dist.unit}</span>
+        </div>
+        <div className="mt-1 flex items-center gap-2 text-[11px] font-medium text-moss">
+          {route?.timeSeconds != null && <span>~{fmtTime(route.timeSeconds)}</span>}
+          {route?.ascentMeters != null && route.ascentMeters > 0 && (
+            <span>↗ {Math.round(route.ascentMeters)} m</span>
+          )}
+          {route?.surface?.pavedRatio != null && (
+            <span>· {Math.round(route.surface.pavedRatio * 100)}% asfalto</span>
+          )}
+          {loading && <span className="text-moss/70">· calculando…</span>}
+        </div>
       </div>
       <ProfilePicker value={state.profile} onChange={planner.setProfile} />
+    </div>
+  ) : (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-pine">Nueva ruta</p>
+          <p className="mt-0.5 text-xs text-moss">Tocá el mapa para empezar.</p>
+        </div>
+        <ProfilePicker value={state.profile} onChange={planner.setProfile} />
+      </div>
+      <button
+        onClick={onStartFromLocation}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blaze px-4 py-2.5 text-sm font-semibold text-paper transition active:scale-[0.98]"
+      >
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="3.2" fill="currentColor" />
+          <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.6" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+        Partir de mi ubicación
+      </button>
     </div>
   );
 
   return (
     <BottomSheet snap={snap} onSnapChange={onSnapChange} header={summary}>
-      {!hasRoute && (
-        <button
-          onClick={onStartFromLocation}
-          className="mt-1 flex w-full items-center gap-2 rounded-2xl bg-blaze px-4 py-3 text-sm font-semibold text-paper transition active:scale-[0.98]"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <circle cx="12" cy="12" r="3.2" fill="currentColor" />
-            <circle cx="12" cy="12" r="7" stroke="currentColor" strokeWidth="1.6" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-          Partir de mi ubicación
-        </button>
-      )}
-
       {route && route.fallback && (
         <p className="mt-2 text-[11px] font-medium text-blaze-deep">
           Ruteo automático no disponible · línea recta

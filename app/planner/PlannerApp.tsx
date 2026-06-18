@@ -14,6 +14,8 @@ import { useOnline } from "./useOnline";
 import OfflinePanel from "./OfflinePanel";
 import RoutesSheet from "./RoutesSheet";
 import RouteSheet from "./RouteSheet";
+import StopsList from "./StopsList";
+import { useStopLabels } from "./useStopLabels";
 import ToolsSheet from "./ToolsSheet";
 import RecorderStatusBar from "./RecorderStatusBar";
 import PwaRegister from "./PwaRegister";
@@ -21,6 +23,7 @@ import type { Snap } from "./BottomSheet";
 import { downloadText } from "./download";
 import { loadLastLocation } from "./lastLocation";
 import { nearestSegmentIndex } from "@/lib/geo/segment";
+import { coordKey } from "@/lib/geo/stopLabel";
 import { totalDistance } from "@/lib/geo/haversine";
 import { toGpx, fromGpx } from "@/lib/io/gpx";
 import { toKml } from "@/lib/io/kml";
@@ -50,7 +53,9 @@ export default function PlannerApp() {
   const [tool, setTool] = useState<"plan" | "measure">("plan");
   const [measurePoints, setMeasurePoints] = useState<LatLng[]>([]);
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
+  const [originKey, setOriginKey] = useState<string | null>(null);
   const { state, route } = planner;
+  const labelFor = useStopLabels(state.waypoints, originKey);
 
   const canSave = state.waypoints.length >= 2;
 
@@ -129,7 +134,9 @@ export default function PlannerApp() {
 
   function handleStartFromLocation() {
     if (geo.position) {
-      planner.addWaypoint(geo.position);
+      const p = { lat: geo.position.lat, lng: geo.position.lng };
+      setOriginKey(coordKey(p));
+      planner.addWaypoint(p);
       setSnap("peek");
     } else {
       geo.locate();
@@ -233,6 +240,15 @@ export default function PlannerApp() {
         snap={snap}
         onSnapChange={setSnap}
         planner={planner}
+        stopsList={
+          <StopsList
+            waypoints={state.waypoints}
+            labelFor={labelFor}
+            onReorder={planner.reorderWaypoints}
+            onRemove={planner.removeWaypoint}
+            onCenter={(i) => setSearchTarget(state.waypoints[i])}
+          />
+        }
         onHoverElevation={setHoverPoint}
         onSave={handleSave}
         onOpenSaved={() => setRoutesOpen(true)}
