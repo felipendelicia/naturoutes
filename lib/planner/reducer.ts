@@ -11,7 +11,8 @@ export type PlannerAction =
   | { type: "undo" }
   | { type: "clear" }
   | { type: "setMode"; mode: Mode }
-  | { type: "setProfile"; profile: Profile };
+  | { type: "setProfile"; profile: Profile }
+  | { type: "load"; waypoints: LatLng[]; mode: Mode; profile: Profile };
 
 export const initialPlannerState: PlannerState = {
   waypoints: [],
@@ -34,5 +35,11 @@ export function plannerReducer(
       return { ...state, mode: action.mode };
     case "setProfile":
       return { ...state, profile: action.profile };
+    case "load":
+      return {
+        waypoints: action.waypoints,
+        mode: action.mode,
+        profile: action.profile,
+      };
   }
 }

@@ -38,5 +38,7 @@ export function usePlanner() {
     clear: () => dispatch({ type: "clear" }),
     setMode: (m: Mode) => dispatch({ type: "setMode", mode: m }),
     setProfile: (p: Profile) => dispatch({ type: "setProfile", profile: p }),
+    load: (waypoints: LatLng[], mode: Mode, profile: Profile) =>
+      dispatch({ type: "load", waypoints, mode, profile }),
   };
 }

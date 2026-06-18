@@ -35,4 +35,20 @@ describe("plannerReducer", () => {
     expect(s.mode).toBe("manual");
     expect(s.profile).toBe("foot");
   });
+
+  it("load replaces waypoints, mode and profile at once", () => {
+    const wps = [
+      { lat: 1, lng: 1 },
+      { lat: 2, lng: 2 },
+    ];
+    const s = plannerReducer(initialPlannerState, {
+      type: "load",
+      waypoints: wps,
+      mode: "manual",
+      profile: "foot",
+    });
+    expect(s.waypoints).toEqual(wps);
+    expect(s.mode).toBe("manual");
+    expect(s.profile).toBe("foot");
+  });
 });

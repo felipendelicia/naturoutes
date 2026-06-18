@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { usePlanner } from "./usePlanner";
 import { useGeolocation } from "./useGeolocation";
+import { useSavedRoutes } from "./useSavedRoutes";
 import MapView from "./MapView";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
+import RoutesSheet from "./RoutesSheet";
+import type { SavedRoute } from "@/lib/store/routeStore";
 import type { LatLng, Mode, Profile } from "@/lib/types";
 
 const CENTER = { lat: 40.4168, lng: -3.7038 }; // Madrid
@@ -57,11 +60,26 @@ function Segmented<T extends string>({
 export default function PlannerApp() {
   const planner = usePlanner();
   const geo = useGeolocation();
+  const saved = useSavedRoutes();
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { state, route, loading } = planner;
 
   const dist = formatDistance(route?.distanceMeters ?? 0);
   const hasRoute = state.waypoints.length > 0;
+  const canSave = state.waypoints.length >= 2;
+
+  function handleSave() {
+    if (!route || !canSave) return;
+    const name = window.prompt("Nombre de la ruta:");
+    if (name && name.trim()) saved.save(route, name.trim());
+  }
+
+  function handleLoad(r: SavedRoute) {
+    planner.load(r.waypoints, r.mode, r.profile);
+    setSearchTarget(r.waypoints[0] ?? null);
+    setSheetOpen(false);
+  }
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-paper-deep">
@@ -182,14 +200,43 @@ export default function PlannerApp() {
                 { value: "manual", label: "Manual" },
               ]}
             />
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSheetOpen(true)}
+                aria-label="Rutas guardadas"
+                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 6h16M4 12h16M4 18h10"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={!canSave}
+                aria-label="Guardar ruta"
+                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95 disabled:opacity-30"
+              >
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M6 4h9l3 3v13l-6-3-6 3V4z"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
               <button
                 onClick={planner.undo}
                 disabled={!hasRoute}
                 aria-label="Deshacer último punto"
-                className="grid h-10 w-10 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95 disabled:opacity-30"
+                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95 disabled:opacity-30"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M9 7L4 12l5 5M4 12h11a5 5 0 010 10"
                     stroke="currentColor"
@@ -203,9 +250,9 @@ export default function PlannerApp() {
                 onClick={planner.clear}
                 disabled={!hasRoute}
                 aria-label="Limpiar ruta"
-                className="grid h-10 w-10 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-blaze hover:text-paper active:scale-95 disabled:opacity-30"
+                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-blaze hover:text-paper active:scale-95 disabled:opacity-30"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M6 6l12 12M18 6L6 18"
                     stroke="currentColor"
@@ -254,6 +301,14 @@ export default function PlannerApp() {
           </div>
         </div>
       </section>
+
+      <RoutesSheet
+        open={sheetOpen}
+        routes={saved.routes}
+        onClose={() => setSheetOpen(false)}
+        onLoad={handleLoad}
+        onDelete={saved.remove}
+      />
     </div>
   );
 }
