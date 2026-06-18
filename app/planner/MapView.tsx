@@ -37,6 +37,30 @@ function FlyTo({ target }: { target: LatLng | null }) {
   return null;
 }
 
+// Trackpad gestures: two-finger swipe pans, pinch (ctrl+wheel) zooms.
+function TrackpadGestures() {
+  const map = useMap();
+  useEffect(() => {
+    const el = map.getContainer();
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (e.ctrlKey) {
+        // Trackpad pinch / ctrl+wheel → zoom around the cursor.
+        const zoom = map.getZoom() - e.deltaY * 0.01;
+        map.setZoomAround(map.mouseEventToContainerPoint(e), zoom, {
+          animate: false,
+        });
+      } else {
+        // Two-finger swipe → pan.
+        map.panBy([e.deltaX, e.deltaY], { animate: false });
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [map]);
+  return null;
+}
+
 export default function MapView({
   route,
   waypoints,
@@ -60,6 +84,7 @@ export default function MapView({
       zoom={zoom}
       className="h-full w-full"
       zoomControl={false}
+      scrollWheelZoom={false}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -69,6 +94,7 @@ export default function MapView({
       <ClickHandler onMapClick={onMapClick} />
       <RecenterOnUser position={userPosition} />
       <FlyTo target={flyTo} />
+      <TrackpadGestures />
 
       {route && route.geometry.length >= 2 && (
         <Polyline

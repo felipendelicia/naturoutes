@@ -1,18 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { searchPlaces, type Place } from "@/lib/geo/geocoding";
+import { distance } from "@/lib/geo/haversine";
+import type { LatLng } from "@/lib/types";
+
+function fmtKm(m: number): string {
+  return m < 1000 ? `${Math.round(m)} m` : `${(m / 1000).toFixed(m < 100000 ? 0 : 0)} km`;
+}
 
 export default function SearchBox({
+  origin,
   onSelect,
+  onActivate,
 }: {
+  origin: LatLng | null;
   onSelect: (place: Place) => void;
+  onActivate?: () => void;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Place[]>([]);
-  const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const reqId = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (expanded) inputRef.current?.focus();
+  }, [expanded]);
 
   useEffect(() => {
     const q = query.trim();
@@ -30,7 +45,6 @@ export default function SearchBox({
           if (id !== reqId.current) return;
           setResults(places);
           setError(places.length === 0 ? "Sin resultados" : null);
-          setOpen(true);
         })
         .catch(() => {
           if (id === reqId.current) setError("No se pudo buscar");
@@ -39,60 +53,94 @@ export default function SearchBox({
     return () => clearTimeout(t);
   }, [query]);
 
+  // Order results by distance to the user (closest first).
+  const sorted = useMemo(() => {
+    if (!origin) return results;
+    return [...results]
+      .map((p) => ({ p, d: distance(origin, p) }))
+      .sort((a, b) => a.d - b.d)
+      .map(({ p, d }) => ({ ...p, _d: d }) as Place & { _d: number });
+  }, [results, origin]);
+
+  function open() {
+    setExpanded(true);
+    onActivate?.();
+  }
+
+  function collapse() {
+    setExpanded(false);
+    setQuery("");
+    setResults([]);
+    setError(null);
+  }
+
   function choose(place: Place) {
     onSelect(place);
-    setQuery(place.label.split(",")[0]);
-    setOpen(false);
-    setResults([]);
+    collapse();
+  }
+
+  if (!expanded) {
+    return (
+      <button
+        onClick={open}
+        aria-label="Buscar lugar"
+        className="panel pointer-events-auto grid h-9 w-9 place-items-center rounded-full text-pine-soft transition active:scale-95"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+      </button>
+    );
   }
 
   return (
-    <div className="pointer-events-auto relative">
-      <div className="panel flex items-center gap-2 rounded-2xl px-3 py-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <circle cx="11" cy="11" r="6.5" stroke="var(--pine-soft)" strokeWidth="1.8" />
-          <path d="M16 16l4.5 4.5" stroke="var(--pine-soft)" strokeWidth="1.8" strokeLinecap="round" />
+    <div className="pointer-events-auto relative w-56">
+      <div className="panel flex items-center gap-1.5 rounded-full px-2.5 py-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden className="shrink-0 text-pine-soft">
+          <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
+          <path d="M16 16l4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
         <input
+          ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => results.length > 0 && setOpen(true)}
           placeholder="Buscar lugar…"
           aria-label="Buscar lugar"
-          className="w-full bg-transparent text-sm text-pine placeholder:text-moss/70 focus:outline-none"
+          className="w-full bg-transparent text-xs text-pine placeholder:text-moss/70 focus:outline-none"
         />
-        {query && (
-          <button
-            onClick={() => {
-              setQuery("");
-              setResults([]);
-              setError(null);
-            }}
-            aria-label="Borrar búsqueda"
-            className="text-moss"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-          </button>
-        )}
+        <button onClick={collapse} aria-label="Cerrar búsqueda" className="shrink-0 text-moss">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+          </svg>
+        </button>
       </div>
 
-      {open && (results.length > 0 || error) && (
-        <ul className="panel absolute inset-x-0 top-full z-[1001] mt-2 max-h-64 overflow-auto rounded-2xl py-1">
-          {error && results.length === 0 ? (
+      {(sorted.length > 0 || error) && (
+        <ul className="panel absolute inset-x-0 top-full z-[1001] mt-2 max-h-60 overflow-auto rounded-2xl py-1">
+          {error && sorted.length === 0 ? (
             <li className="px-3 py-2 text-xs text-moss">{error}</li>
           ) : (
-            results.map((p, i) => (
-              <li key={i}>
-                <button
-                  onClick={() => choose(p)}
-                  className="block w-full truncate px-3 py-2 text-left text-sm text-pine transition hover:bg-pine/8"
-                >
-                  {p.label}
-                </button>
-              </li>
-            ))
+            sorted.map((p, i) => {
+              const d = (p as Place & { _d?: number })._d;
+              return (
+                <li key={i}>
+                  <button
+                    onClick={() => choose(p)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left transition hover:bg-pine/8"
+                  >
+                    <span className="min-w-0 flex-1 truncate text-xs text-pine">
+                      {p.label}
+                    </span>
+                    {d != null && (
+                      <span className="shrink-0 font-mono text-[10px] text-moss">
+                        {fmtKm(d)}
+                      </span>
+                    )}
+                  </button>
+                </li>
+              );
+            })
           )}
         </ul>
       )}

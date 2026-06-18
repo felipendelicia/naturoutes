@@ -141,7 +141,11 @@ export default function PlannerApp() {
           />
         </div>
        </div>
-       <SearchBox onSelect={(p) => setSearchTarget({ lat: p.lat, lng: p.lng })} />
+       <SearchBox
+         origin={geo.position ?? CENTER}
+         onActivate={geo.locate}
+         onSelect={(p) => setSearchTarget({ lat: p.lat, lng: p.lng })}
+       />
       </header>
 
       {/* ── Empty-state hint ──────────────────────────────── */}
