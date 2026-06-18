@@ -51,6 +51,19 @@ function FlyTo({ target }: { target: LatLng | null }) {
   return null;
 }
 
+// When a radius ring is added, fit the map so the whole circle is visible.
+function FitRing({ ring }: { ring: Ring | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!ring) return;
+    const bounds = L.latLng(ring.center.lat, ring.center.lng).toBounds(
+      ring.radiusKm * 2000,
+    );
+    map.fitBounds(bounds, { padding: [40, 40] });
+  }, [ring, map]);
+  return null;
+}
+
 // Pointer gestures:
 //  - mouse wheel        → zoom
 //  - pinch / ctrl+wheel → zoom
@@ -90,6 +103,7 @@ export default function MapView({
   userPosition,
   recenter = null,
   rings = [],
+  fitRing = null,
   hoverPoint = null,
   onMapClick,
   onMoveWaypoint,
@@ -104,6 +118,7 @@ export default function MapView({
   userPosition: (LatLng & { accuracy?: number }) | null;
   recenter?: LatLng | null;
   rings?: Ring[];
+  fitRing?: Ring | null;
   hoverPoint?: LatLng | null;
   onMapClick: (p: LatLng) => void;
   onMoveWaypoint?: (index: number, point: LatLng) => void;
@@ -141,6 +156,7 @@ export default function MapView({
       />
       <RecenterOnUser position={recenter} />
       <FlyTo target={flyTo} />
+      <FitRing ring={fitRing} />
       <TrackpadGestures />
 
       {rings.map((r) => (

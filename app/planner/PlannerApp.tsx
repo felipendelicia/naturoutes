@@ -83,6 +83,7 @@ export default function PlannerApp() {
   const [searchTarget, setSearchTarget] = useState<LatLng | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rings, setRings] = useState<Ring[]>([]);
+  const [lastRing, setLastRing] = useState<Ring | null>(null);
   const [hoverPoint, setHoverPoint] = useState<LatLng | null>(null);
   // Start where we last were (persisted), then live GPS recenters precisely.
   const [initialCenter] = useState<LatLng>(() => loadLastLocation() ?? CENTER);
@@ -131,14 +132,13 @@ export default function PlannerApp() {
 
   function handleAddRing(radiusKm: number) {
     if (!geo.position) return;
-    setRings((rs) => [
-      ...rs,
-      {
-        id: crypto.randomUUID(),
-        center: { lat: geo.position!.lat, lng: geo.position!.lng },
-        radiusKm,
-      },
-    ]);
+    const ring: Ring = {
+      id: crypto.randomUUID(),
+      center: { lat: geo.position.lat, lng: geo.position.lng },
+      radiusKm,
+    };
+    setRings((rs) => [...rs, ring]);
+    setLastRing(ring); // triggers the map to frame the new circle
   }
 
   function handleInsertWaypoint(point: LatLng) {
@@ -170,6 +170,7 @@ export default function PlannerApp() {
           userPosition={geo.position}
           recenter={geo.centerTarget}
           rings={rings}
+          fitRing={lastRing}
           hoverPoint={hoverPoint}
           onMapClick={planner.addWaypoint}
           onMoveWaypoint={planner.moveWaypoint}
