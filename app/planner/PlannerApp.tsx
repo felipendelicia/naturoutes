@@ -8,6 +8,11 @@ import MapView from "./MapView";
 import ElevationProfile from "./ElevationProfile";
 import SearchBox from "./SearchBox";
 import RoutesSheet from "./RoutesSheet";
+import RouteMenu from "./RouteMenu";
+import { downloadText } from "./download";
+import { toGpx, fromGpx } from "@/lib/io/gpx";
+import { toKml } from "@/lib/io/kml";
+import { directionsUrl } from "@/lib/io/googleMaps";
 import type { SavedRoute } from "@/lib/store/routeStore";
 import type { LatLng, Mode, Profile } from "@/lib/types";
 
@@ -79,6 +84,35 @@ export default function PlannerApp() {
     planner.load(r.waypoints, r.mode, r.profile);
     setSearchTarget(r.waypoints[0] ?? null);
     setSheetOpen(false);
+  }
+
+  function handleExportGpx() {
+    if (route) downloadText("naturoutes-ruta.gpx", "application/gpx+xml", toGpx(route));
+  }
+
+  function handleExportKml() {
+    if (route)
+      downloadText(
+        "naturoutes-ruta.kml",
+        "application/vnd.google-earth.kml+xml",
+        toKml(route),
+      );
+  }
+
+  function handleGoogleMaps() {
+    if (!route) return;
+    const url = directionsUrl(route, state.profile);
+    if (url) window.open(url, "_blank", "noopener");
+  }
+
+  function handleImport(text: string) {
+    const { waypoints, dense } = fromGpx(text);
+    if (waypoints.length < 2) {
+      window.alert("GPX inválido o sin puntos suficientes.");
+      return;
+    }
+    planner.load(waypoints, dense ? "manual" : state.mode, state.profile);
+    setSearchTarget(waypoints[0]);
   }
 
   return (
@@ -205,35 +239,15 @@ export default function PlannerApp() {
               ]}
             />
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => setSheetOpen(true)}
-                aria-label="Rutas guardadas"
-                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path
-                    d="M4 6h16M4 12h16M4 18h10"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={!canSave}
-                aria-label="Guardar ruta"
-                className="grid h-9 w-9 place-items-center rounded-full bg-pine/8 text-pine transition hover:bg-pine/15 active:scale-95 disabled:opacity-30"
-              >
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path
-                    d="M6 4h9l3 3v13l-6-3-6 3V4z"
-                    stroke="currentColor"
-                    strokeWidth="1.7"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+              <RouteMenu
+                canExport={canSave}
+                onSave={handleSave}
+                onOpenSaved={() => setSheetOpen(true)}
+                onExportGpx={handleExportGpx}
+                onExportKml={handleExportKml}
+                onOpenGoogleMaps={handleGoogleMaps}
+                onImportText={handleImport}
+              />
               <button
                 onClick={planner.undo}
                 disabled={!hasRoute}
